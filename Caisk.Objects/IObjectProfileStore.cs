@@ -2,6 +2,7 @@ namespace Caisk.Objects;
 
 public interface IObjectProfileStore<TProfile> where TProfile : ObjectProfile, new()
 {
+    string Name { get; }
     ValueTask<TProfile> Create(string name);
     Task Store(TProfile profile);
     Task Rename(string oldName, string newName);

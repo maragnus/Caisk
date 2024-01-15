@@ -1,0 +1,70 @@
+﻿@page "/shells"
+@using Caisk.Docker
+@using Caisk.App.Components.Modals
+@using Caisk.SecureShells
+@inherits BasePage
+@rendermode InteractiveServer
+
+<MyMudProviders/>
+
+<PageTitle>Secure Shells (Caisk)</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Secure Shells</MudText>
+<MudText Class="mb-8">Manage docker registry hosts and credentials</MudText>
+
+@if (IsLoading)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
+}
+else
+{
+    <MudTable T="SecureShellProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.HostName!)">Host Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.UserName!)">User Name</MudTableSortLabel></MudTh>
+            <MudTh>Key Pairs</MudTh> 
+            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.MachineInfo!)">Machine Info</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Host Name">@context.HostName</MudTd>
+            <MudTd DataLabel="User Name">@context.UserName</MudTd>
+            <MudTd DataLabel="Key Pairs">@(string.Join(", ", context.KeyPairNames))</MudTd>
+            <MudTd DataLabel="Machine Info">@context.MachineInfo</MudTd>
+            <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
+            <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new[]{50, 100}"/>
+        </PagerContent>
+    </MudTable>
+    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@AddClick" Color="Color.Primary">Add Secure Shell</MudButton>
+}
+
+@code {
+    private SecureShellProfile[] _profiles = Array.Empty<SecureShellProfile>();
+
+    [Inject] public ISecureShellStore ProfileStore { get; set; } = default!;
+
+    protected override async Task OnSafeInitializedAsync() =>
+        _profiles = await ProfileStore.Get();
+
+    private async Task AddClick()
+    {
+        var names = _profiles.Select(p => p.Name).ToArray();
+        var parameters = new DialogParameters { { nameof(NewProfileModal.Names), names } };
+        var modal = await DialogService.ShowAsync<NewProfileModal>("Add Secure Shell", parameters);
+        var result = await modal.Result;
+        if (result.Canceled) return;
+        NavigationManager.NavigateTo($"/shells/{result.Data}");
+    }
+
+    private void OpenProfile(TableRowClickEventArgs<SecureShellProfile> row)
+    {
+        NavigationManager.NavigateTo($"/shells/{row.Item.Name}");
+    }
+
+}

@@ -3,4 +3,7 @@
 namespace Caisk.Data.LiteDb;
 
 internal class ApplicationStore(ILiteCollection<ApplicationProfile> collection)
-    : BaseStore<ApplicationProfile>(collection), IApplicationStore;
+    : BaseStore<ApplicationProfile>(collection), IApplicationStore
+{
+    public override string Name => "Application";
+}

@@ -1,22 +1,26 @@
 ﻿@using Caisk.Objects
-<MudDialog>
-    <DialogContent>
-        <MudTextField T="string" @bind-Text="@_name" Label="Profile Name" Validation="ValidateName" Variant="Variant.Outlined"/>
-        <MudAlert Severity="Severity.Info" Class="my-4">@ObjectProfileUtility.NameConstraint</MudAlert>
-        <MudDivider/>
-    </DialogContent>
-    <DialogActions>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Confirm">Create</MudButton>
-        <MudButton Color="Color.Error" OnClick="Cancel">Cancel</MudButton>
-    </DialogActions>
-</MudDialog>
+
+<form @onsubmit="@FormSubmit">
+    <MudDialog DefaultFocus="DefaultFocus.FirstChild">
+        <DialogContent>
+            <MudTextField T="string" @bind-Text="@_name" Label="Profile Name" Validation="@((object)ValidateName)" Immediate Variant="Variant.Outlined"/>
+            <MudAlert Severity="Severity.Info" Class="my-4">@ObjectProfileUtility.NameConstraint</MudAlert>
+            <MudDivider/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" OnClick="@Confirm" Disabled="!_isValid">Create</MudButton>
+            <MudButton Color="Color.Error" OnClick="@Cancel">Cancel</MudButton>
+        </DialogActions>
+    </MudDialog>
+</form>
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter] public string[] Names { get; set; } = default!;
-
+    
     private string? _name;
+    private bool _isValid;
 
     private void Confirm()
     {
@@ -28,16 +32,23 @@
 
     public string? ValidateName(string? name)
     {
-        if (string.IsNullOrWhiteSpace(_name))
+        _isValid = false;
+        if (string.IsNullOrWhiteSpace(name))
             return "Name is required";
-        
-        if (!ObjectProfileUtility.IsNameValid(_name))       
+
+        if (!ObjectProfileUtility.IsNameValid(name))
             return "Name format is incorrect";
-        
-        if (Names.Contains(_name)) 
+
+        if (Names.Contains(name))
             return "Name already exists";
-        
+
+        _isValid = true;
         return null;
+    }
+
+    private void FormSubmit()
+    {
+        Confirm();
     }
 
 }

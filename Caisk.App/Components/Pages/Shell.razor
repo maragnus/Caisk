@@ -1,0 +1,42 @@
+﻿@page "/shells/{Name}"
+@using Caisk.SecureShells
+@inherits BaseProfileEditor<SecureShellProfile, ISecureShellStore>
+
+@rendermode InteractiveServer
+
+<MyMudProviders/>
+<PageTitle>Secure Shell: @Name (Caisk)</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small">
+    <MudText Typo="Typo.h4" GutterBottom="true">Secure Shells</MudText>
+    <MudText Class="mb-8">Configure SSH connection</MudText>
+
+    <MudPaper Class="pa-4">
+        @if (IsLoading)
+        {
+            <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
+        }
+        else
+        {
+            <MudForm Model="Profile" @bind-IsValid="IsValid">
+                <MudStack Spacing="4">
+                    <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
+                    <MudTextField Label="Host Name" Required Immediate InputType="InputType.Text" @bind-Value="Profile.HostName"/>
+                    <MudTextField Label="User Name" Immediate InputType="InputType.Text" @bind-Value="Profile.UserName"/>
+                    <MudTextField Label="User Password" Immediate InputType="InputType.Password" @bind-Value="Profile.Password"/>
+                    <MudTextField Label="Root Password" Immediate InputType="InputType.Password" @bind-Value="Profile.RootPassword"/>
+
+                    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
+                        @if (!IsNew)
+                        {
+                            <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="@Delete" Color="Color.Error" Variant="Variant.Filled">Delete</MudButton>
+                            <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
+                        }
+                        <MudButton OnClick="@Return" Color="Color.Error">Cancel</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="@Store" Color="Color.Primary" Variant="Variant.Filled" Disabled="!IsValid">Store</MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudForm>
+        }
+    </MudPaper>
+</MudContainer>

@@ -5,6 +5,8 @@ namespace Caisk.Data.LiteDb;
 internal class SecureShellStore(ILiteCollection<SecureShellProfile> collection)
     : BaseStore<SecureShellProfile>(collection), ISecureShellStore
 {
-    public SecureShellProfile[] GetUsingPrivateKey(string privateKeyName) => 
-        collection.Find(profile => profile.KeyPairNames.Contains(privateKeyName)).ToArray();
+    public override string Name => "Secure Shell";
+
+    public SecureShellProfile[] GetUsingPrivateKey(string privateKeyName) =>
+        Collection.Find(profile => profile.KeyPairNames.Contains(privateKeyName)).ToArray();
 }

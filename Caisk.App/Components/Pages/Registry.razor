@@ -1,10 +1,11 @@
 ﻿@page "/registries/{Name}"
 @using Caisk.Docker
-@inherits BasePage
+@inherits BaseProfileEditor<RegistryProfile, IRegistryStore>
+
 @rendermode InteractiveServer
 
 <MyMudProviders/>
-<PageTitle>Add Docker Registry (Caisk)</PageTitle>
+<PageTitle>Docker Registry (Caisk)</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Small">
     <MudText Typo="Typo.h4" GutterBottom="true">Docker Registry</MudText>
@@ -18,66 +19,38 @@
         }
         else
         {
-            <MudForm Model="_profile" @bind-IsValid="_isValid">
+            <MudForm Model="Profile" @bind-IsValid="IsValid">
                 <MudStack Spacing="4">
-                    <MudTextField Label="Name" ReadOnly Value="_profile.Name"/>
-                    <MudTextField Label="Host Name" Required InputType="InputType.Text" @bind-Value="_profile.HostName"/>
-                    <MudRadioGroup T="RegistryAuthenticationType" @bind-Value="_profile.AuthenticationType">
+                    <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
+                    <MudTextField Label="Host Name" Immediate Required InputType="InputType.Text" @bind-Value="Profile.HostName"/>
+                    <MudRadioGroup T="RegistryAuthenticationType" @bind-Value="Profile.AuthenticationType">
                         <MudRadio Option="@RegistryAuthenticationType.Anonymous">Anonymous</MudRadio>
                         <MudRadio Option="@RegistryAuthenticationType.Basic">Basic</MudRadio>
                         <MudRadio Option="@RegistryAuthenticationType.Bearer">Bearer</MudRadio>
                     </MudRadioGroup>
-                    @if (_profile.AuthenticationType != RegistryAuthenticationType.Anonymous)
+                    @if (Profile.AuthenticationType != RegistryAuthenticationType.Anonymous)
                     {
-                        <MudTextField Label="User Name" Required="_profile.AuthenticationType != RegistryAuthenticationType.Anonymous" InputType="InputType.Text" @bind-Value="_profile.UserName"/>
+                        <MudTextField Label="User Name" Immediate Required="Profile.AuthenticationType != RegistryAuthenticationType.Anonymous" InputType="InputType.Text" @bind-Value="Profile.UserName"/>
                     }
-                    @if (_profile.AuthenticationType == RegistryAuthenticationType.Basic)
+                    @if (Profile.AuthenticationType == RegistryAuthenticationType.Basic)
                     {
-                        <MudTextField Label="Password" InputType="InputType.Password" @bind-Value="_profile.Password"/>
+                        <MudTextField Label="Password" Immediate InputType="InputType.Password" @bind-Value="Profile.Password"/>
                     }
-                    @if (_profile.AuthenticationType == RegistryAuthenticationType.Bearer)
+                    @if (Profile.AuthenticationType == RegistryAuthenticationType.Bearer)
                     {
-                        <MudTextField Label="Bearer Token" InputType="InputType.Password" @bind-Value="_profile.BearerToken"/>
+                        <MudTextField Label="Bearer Token" Immediate Required InputType="InputType.Password" @bind-Value="Profile.BearerToken"/>
                     }
-                    <div class="d-flex align-center justify-end">
-                        <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="Store" Color="Color.Primary" Variant="Variant.Filled" Disabled="!_isValid">Store</MudButton>
-                        <MudButton OnClick="Return" Color="Color.Error">Cancel</MudButton>
-                    </div>
+                    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
+                        @if (!IsNew)
+                        {
+                            <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="@Delete" Color="Color.Error" Variant="Variant.Filled">Delete</MudButton>
+                            <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
+                        }
+                        <MudButton OnClick="@Return" Color="Color.Error">Cancel</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="@Store" Color="Color.Primary" Variant="Variant.Filled" Disabled="!IsValid">Store</MudButton>
+                    </MudStack>
                 </MudStack>
             </MudForm>
         }
     </MudPaper>
 </MudContainer>
-
-@code {
-    [Parameter] public string? Name { get; set; }
-    private RegistryProfile _profile = default!;
-
-    [Inject] public IRegistryStore RegistryStore { get; set; } = default!;
-
-    protected override async Task OnSafeInitializedAsync()
-    {
-        if (string.IsNullOrWhiteSpace(Name))
-        {
-            Return();
-            return;
-        }
-
-        _profile = await RegistryStore.Get(Name)
-                   ?? await RegistryStore.Create(Name);
-    }
-
-    private async Task Store()
-    {
-        await RegistryStore.Store(_profile);
-        Return();
-    }
-
-    public void Return()
-    {
-        NavigationManager.NavigateTo("/registries");
-    }
-
-    private MudChip _chip;
-    private bool _isValid;
-}

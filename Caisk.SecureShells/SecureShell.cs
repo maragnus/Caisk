@@ -19,7 +19,7 @@ public class SecureShell(SecureShellProfile profile, SecureShellManager secureSh
                 new PrivateKeyAuthenticationMethod(profile.UserName,privateKeys));
         }
         
-        var connectionInfo = new ConnectionInfo(profile.Host, profile.UserName, methods.ToArray());
+        var connectionInfo = new ConnectionInfo(profile.HostName, profile.UserName, methods.ToArray());
 
         var client = new SshClientAsync(connectionInfo);
         await client.ConnectAsync();

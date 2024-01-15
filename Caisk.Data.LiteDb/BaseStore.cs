@@ -8,6 +8,8 @@ internal abstract class BaseStore<TProfile>(ILiteCollection<TProfile> collection
 {
     protected ILiteCollection<TProfile> Collection { get; } = collection;
 
+    public virtual string Name { get; } = typeof(TProfile).Name;
+
     public ValueTask<TProfile> Create(string name) => ValueTask.FromResult(new TProfile()
         {
             Name = name, 

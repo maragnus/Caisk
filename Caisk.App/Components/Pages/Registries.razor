@@ -42,10 +42,10 @@ else
 @code {
     private RegistryProfile[] _profiles = Array.Empty<RegistryProfile>();
 
-    [Inject] public IRegistryStore RegistryStore { get; set; } = default!;
+    [Inject] public IRegistryStore ProfileStore { get; set; } = default!;
 
     protected override async Task OnSafeInitializedAsync() =>
-        _profiles = await RegistryStore.Get();
+        _profiles = await ProfileStore.Get();
 
     private async Task AddClick()
     {

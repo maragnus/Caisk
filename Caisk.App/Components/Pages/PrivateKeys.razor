@@ -1,0 +1,67 @@
+﻿@page "/keys"
+@using Caisk.SecureShells
+@inherits BasePage
+@rendermode InteractiveServer
+
+<MyMudProviders/>
+
+<PageTitle>Secure Shells (Caisk)</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Private Keys</MudText>
+<MudText Class="mb-8">Manage encryption keys for Secure Shell connections</MudText>
+
+@if (IsLoading)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
+}
+else
+{
+    <MudTable T="PrivateKeyProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x=>x.Type!)">Type</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Host Name">@context.Type</MudTd>
+            <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
+            <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new[]{50, 100}"/>
+        </PagerContent>
+    </MudTable>
+    <MudStack Row Spacing="4">
+        <MudButton StartIcon="@Icons.Material.Filled.Key" OnClick="() => AddClick(PrivateKeyType.Dsa)" Color="Color.Primary">Add DSA</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Key" OnClick="() => AddClick(PrivateKeyType.Rsa)" Color="Color.Primary">Add RSA</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Key" OnClick="() => AddClick(PrivateKeyType.Ecdsa)" Color="Color.Primary">Add Ecdsa</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Key" OnClick="() => AddClick(PrivateKeyType.Ed22519)" Color="Color.Primary">Add Ed22519</MudButton>
+    </MudStack>
+}
+
+@code {
+    private PrivateKeyProfile[] _profiles = Array.Empty<PrivateKeyProfile>();
+
+    [Inject] public IPrivateKeyStore ProfileStore { get; set; } = default!;
+
+    protected override async Task OnSafeInitializedAsync() =>
+        _profiles = await ProfileStore.Get();
+
+    private async Task AddClick(PrivateKeyType type)
+    {
+        var names = _profiles.Select(p => p.Name).ToArray();
+        var parameters = new DialogParameters { { nameof(NewProfileModal.Names), names } };
+        var modal = await DialogService.ShowAsync<NewProfileModal>("Add Private Key", parameters);
+        var result = await modal.Result;
+        if (result.Canceled) return;
+        NavigationManager.NavigateTo($"/shells/{result.Data}/{type}");
+    }
+
+    private void OpenProfile(TableRowClickEventArgs<PrivateKeyProfile> row)
+    {
+        NavigationManager.NavigateTo($"/shells/{row.Item.Name}");
+    }
+
+}
