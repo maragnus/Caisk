@@ -1,0 +1,65 @@
+﻿@page "/registries"
+@using Caisk.Docker
+@using Caisk.App.Components.Modals
+@inherits BasePage
+@rendermode InteractiveServer
+
+<MyMudProviders/>
+
+<PageTitle>Docker Registries (Caisk)</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Docker Registries</MudText>
+<MudText Class="mb-8">Manage docker registry hosts and credentials</MudText>
+
+@if (IsLoading)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
+}
+else
+{
+    <MudTable T="RegistryProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<RegistryProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<RegistryProfile, object>(x=>x.HostName!)">Host Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<RegistryProfile, object>(x=>x.UserName!)">User Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<RegistryProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<RegistryProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Host">@context.HostName</MudTd>
+            <MudTd DataLabel="User">@context.UserName</MudTd>
+            <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
+            <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new[]{50, 100}"/>
+        </PagerContent>
+    </MudTable>
+    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@AddClick" Color="Color.Primary">Add Registry</MudButton>
+}
+
+@code {
+    private RegistryProfile[] _profiles = Array.Empty<RegistryProfile>();
+
+    [Inject] public IRegistryStore RegistryStore { get; set; } = default!;
+
+    protected override async Task OnSafeInitializedAsync() =>
+        _profiles = await RegistryStore.Get();
+
+    private async Task AddClick()
+    {
+        var names = _profiles.Select(p => p.Name).ToArray();
+        var parameters = new DialogParameters { { nameof(NewProfileModal.Names), names } };
+        var modal = await DialogService.ShowAsync<NewProfileModal>("Add Registry", parameters);
+        var result = await modal.Result;
+        if (result.Canceled) return;
+        NavigationManager.NavigateTo($"/registries/{result.Data}");
+    }
+
+    private void OpenProfile(TableRowClickEventArgs<RegistryProfile> row)
+    {
+        NavigationManager.NavigateTo($"/registries/{row.Item.Name}");
+    }
+
+}

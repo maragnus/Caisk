@@ -1,0 +1,43 @@
+﻿@using Caisk.Objects
+<MudDialog>
+    <DialogContent>
+        <MudTextField T="string" @bind-Text="@_name" Label="Profile Name" Validation="ValidateName" Variant="Variant.Outlined"/>
+        <MudAlert Severity="Severity.Info" Class="my-4">@ObjectProfileUtility.NameConstraint</MudAlert>
+        <MudDivider/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Confirm">Create</MudButton>
+        <MudButton Color="Color.Error" OnClick="Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string[] Names { get; set; } = default!;
+
+    private string? _name;
+
+    private void Confirm()
+    {
+        if (ValidateName(_name) is null)
+            MudDialog.Close(DialogResult.Ok(_name));
+    }
+
+    private void Cancel() => MudDialog.Close(DialogResult.Cancel());
+
+    public string? ValidateName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(_name))
+            return "Name is required";
+        
+        if (!ObjectProfileUtility.IsNameValid(_name))       
+            return "Name format is incorrect";
+        
+        if (Names.Contains(_name)) 
+            return "Name already exists";
+        
+        return null;
+    }
+
+}

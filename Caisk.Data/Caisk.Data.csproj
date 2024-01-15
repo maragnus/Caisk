@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Caisk.Applications\Caisk.Applications.csproj" />
+      <ProjectReference Include="..\Caisk.Docker\Caisk.Docker.csproj" />
+      <ProjectReference Include="..\Caisk.Mongo\Caisk.Mongo.csproj" />
+      <ProjectReference Include="..\Caisk.Objects\Caisk.Objects.csproj" />
+      <ProjectReference Include="..\Caisk.SecureShells\Caisk.SecureShells.csproj" />
+    </ItemGroup>
+
+</Project>
