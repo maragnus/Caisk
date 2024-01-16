@@ -1,17 +1,18 @@
-﻿@page "/mongo/{Name}"
+﻿@page "/apps/{ParentName}/{Name}"
+@using Caisk.Applications
 @using Caisk.Managers.Mongo
 @using Caisk.SecureShells
-@inherits BaseProfileEditor<MongoDatabaseProfile, IMongoDatabaseStore>
+@inherits BaseProfileEditor<ApplicationEnvironmentProfile, IApplicationEnvironmentStore>
 
 @rendermode InteractiveServer
 
 <MyMudProviders/>
-<PageTitle>Mongo Database: @Name (Caisk)</PageTitle>
+<PageTitle>Application: @ParentName/@Name (Caisk)</PageTitle>
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" ConfirmExternalNavigation="IsTouched"/>
 
 <MudContainer MaxWidth="MaxWidth.Small">
-    <MudText Typo="Typo.h4" GutterBottom="true">Mongo Database</MudText>
-    <MudText Class="mb-8">Configure SSH connection</MudText>
+    <MudText Typo="Typo.h4" GutterBottom="true">Application Environment</MudText>
+    <MudText Class="mb-8">Configure, update, deploy application environment</MudText>
 
     <MudPaper Class="pa-4">
         @if (IsLoading)
@@ -23,17 +24,9 @@
             <MudForm Model="Profile" @bind-IsValid="IsValid" @bind-IsTouched="IsTouched">
                 <MudStack Spacing="4">
                     <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
-                    <MudTextField Label="Host Name" Required Immediate InputType="InputType.Text" @bind-Value="Profile.HostName"/>
-                    <MudTextField Label="Authentication Database" Required Immediate InputType="InputType.Text" @bind-Value="Profile.AuthenticationDatabase"/>
-                    <MudTextField Label="User Name" Immediate InputType="InputType.Text" @bind-Value="Profile.UserName"/>
-                    <MudTextField Label="User Password" Immediate InputType="InputType.Password" @bind-Value="Profile.Password"/>
-                    <MudTextField Label="Database" Required Immediate InputType="InputType.Text" @bind-Value="Profile.Database"/>
-                    <ProfileSelector T="SecureShellProfile" Label="Tunnel" @bind-Value="Profile.SecureShellName" Icon="@Icons.Material.Filled.Terminal" />
-                    @if (!string.IsNullOrWhiteSpace(Profile.SecureShellName))
-                    {
-                        <MudTextField T="int?" Label="Tunnel Port" Required Immediate InputType="InputType.Number" @bind-Value="Profile.TunnelLocalPort"/>
-                    }
-
+                    <MudTextField Label="Application" ReadOnly Value="Profile.ParentName"/>
+                    <ProfileSelector T="MongoDatabaseProfile" Label="Mongo Database" @bind-Value="Profile.MongoDatabaseName" Icon="@Icons.Material.Filled.BackupTable" />
+                    <ProfileSelector T="SecureShellProfile" Label="Secure Shell" @bind-Value="Profile.SecureShellName" Icon="@Icons.Material.Filled.Terminal" />
                     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
                         @if (!IsNew)
                         {

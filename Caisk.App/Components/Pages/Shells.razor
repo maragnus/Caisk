@@ -50,7 +50,7 @@ else
     [Inject] public ISecureShellStore ProfileStore { get; set; } = default!;
 
     protected override async Task OnSafeInitializedAsync() =>
-        _profiles = await ProfileStore.Get();
+        _profiles = await ProfileStore.GetAll();
 
     private async Task AddClick()
     {
@@ -59,12 +59,10 @@ else
         var modal = await DialogService.ShowAsync<NewProfileModal>("Add Secure Shell", parameters);
         var result = await modal.Result;
         if (result.Canceled) return;
-        NavigationManager.NavigateTo($"/shells/{result.Data}");
+        NavigationManager.NavigateToProfile<SecureShellProfile>((string)result.Data);
     }
 
-    private void OpenProfile(TableRowClickEventArgs<SecureShellProfile> row)
-    {
-        NavigationManager.NavigateTo($"/shells/{row.Item.Name}");
-    }
+    private void OpenProfile(TableRowClickEventArgs<SecureShellProfile> row) =>
+        NavigationManager.NavigateToProfile<SecureShellProfile>(row.Item.Name);
 
 }

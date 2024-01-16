@@ -18,10 +18,18 @@ else
 {
     <MudTable T="PrivateKeyProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x=>x.Type!)">Type</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x => x.Name)">Name</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x => x.Type!)">Type</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x => x.Created)">Added</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x => x.Updated)">Updated</MudTableSortLabel>
+            </MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name">@context.Name</MudTd>
@@ -30,7 +38,7 @@ else
             <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
         </RowTemplate>
         <PagerContent>
-            <MudTablePager PageSizeOptions="new[]{50, 100}"/>
+            <MudTablePager PageSizeOptions="new[] { 50, 100 }"/>
         </PagerContent>
     </MudTable>
     <MudStack Row Spacing="4">
@@ -44,7 +52,7 @@ else
     [Inject] public IPrivateKeyStore ProfileStore { get; set; } = default!;
 
     protected override async Task OnSafeInitializedAsync() =>
-        _profiles = await ProfileStore.Get();
+        _profiles = await ProfileStore.GetAll();
 
     private async Task AddClick()
     {
@@ -55,13 +63,11 @@ else
         if (result.Canceled) return;
         var response = (NewPrivateKeyModal.Result)result.Data;
         await ProfileStore.Generate(response.Name, response.Type, response.Bits);
-        
-        NavigationManager.NavigateTo($"/keys/{response.Name}");
+
+        NavigationManager.NavigateToProfile<PrivateKeyProfile>(response.Name);
     }
 
-    private void OpenProfile(TableRowClickEventArgs<PrivateKeyProfile> row)
-    {
-        NavigationManager.NavigateTo($"/keys/{row.Item.Name}");
-    }
+    private void OpenProfile(TableRowClickEventArgs<PrivateKeyProfile> row) =>
+        NavigationManager.NavigateToProfile<PrivateKeyProfile>(row.Item.Name);
 
 }

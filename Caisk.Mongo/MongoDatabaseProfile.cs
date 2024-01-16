@@ -2,7 +2,7 @@ using Caisk.Objects;
 
 namespace Caisk.Managers.Mongo;
 
-public class MongoServerProfile : ObjectProfile
+public class MongoDatabaseProfile : ObjectProfile
 {
     public string? HostName { get; set; }
     public int? Port { get; set; }

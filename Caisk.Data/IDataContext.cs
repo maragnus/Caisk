@@ -9,7 +9,8 @@ namespace Caisk.Data;
 public interface IDataContext
 {
     IApplicationStore ApplicationStore { get; }
-    IMongoServerStore MongoServerStore { get; }
+    IApplicationEnvironmentStore ApplicationEnvironmentStore { get; }
+    IMongoDatabaseStore MongoDatabaseStore { get; }
     ISecureShellStore SecureShellStore { get; }
     IPrivateKeyStore PrivateKeyStore { get; }
     IRegistryStore RegistryStore { get; }

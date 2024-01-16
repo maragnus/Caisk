@@ -16,14 +16,14 @@
 }
 else
 {
-    <MudTable T="MongoServerProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
+    <MudTable T="MongoDatabaseProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.HostName!)">Host Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.UserName!)">User Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.Database!)">Database</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoDatabaseProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoDatabaseProfile, object>(x=>x.HostName!)">Host Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoDatabaseProfile, object>(x=>x.UserName!)">User Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoDatabaseProfile, object>(x=>x.Database!)">Database</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoDatabaseProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoDatabaseProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name">@context.Name</MudTd>
@@ -41,12 +41,12 @@ else
 }
 
 @code {
-    private MongoServerProfile[] _profiles = Array.Empty<MongoServerProfile>();
+    private MongoDatabaseProfile[] _profiles = Array.Empty<MongoDatabaseProfile>();
 
-    [Inject] public IMongoServerStore ProfileStore { get; set; } = default!;
+    [Inject] public IMongoDatabaseStore ProfileStore { get; set; } = default!;
 
     protected override async Task OnSafeInitializedAsync() =>
-        _profiles = await ProfileStore.Get();
+        _profiles = await ProfileStore.GetAll();
 
     private async Task AddClick()
     {
@@ -55,12 +55,10 @@ else
         var modal = await DialogService.ShowAsync<NewProfileModal>("Add Mongo Server", parameters);
         var result = await modal.Result;
         if (result.Canceled) return;
-        NavigationManager.NavigateTo($"/mongo/{result.Data}");
+        NavigationManager.NavigateToProfile<MongoDatabaseProfile>((string)result.Data);
     }
 
-    private void OpenProfile(TableRowClickEventArgs<MongoServerProfile> row)
-    {
-        NavigationManager.NavigateTo($"/mongo/{row.Item.Name}");
-    }
+    private void OpenProfile(TableRowClickEventArgs<MongoDatabaseProfile> row) => 
+        NavigationManager.NavigateToProfile<MongoDatabaseProfile>(row.Item.Name);
 
 }

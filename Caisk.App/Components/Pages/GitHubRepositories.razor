@@ -18,11 +18,21 @@ else
 {
     <MudTable T="GitHubRepositoryProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x=>x.OrganizationName!)">Organization</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x=>x.RepositoryName!)">Repository</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x => x.Name)">Name</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x => x.OrganizationName!)">Organization</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x => x.RepositoryName!)">Repository</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x => x.Created)">Added</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x => x.Updated)">Updated</MudTableSortLabel>
+            </MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name">@context.Name</MudTd>
@@ -32,7 +42,7 @@ else
             <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
         </RowTemplate>
         <PagerContent>
-            <MudTablePager PageSizeOptions="new[]{50, 100}"/>
+            <MudTablePager PageSizeOptions="new[] { 50, 100 }"/>
         </PagerContent>
     </MudTable>
     <MudStack Row Spacing="4">
@@ -46,7 +56,7 @@ else
     [Inject] public IGitHubRepositoryStore ProfileStore { get; set; } = default!;
 
     protected override async Task OnSafeInitializedAsync() =>
-        _profiles = await ProfileStore.Get();
+        _profiles = await ProfileStore.GetAll();
 
     private async Task AddClick()
     {
@@ -55,12 +65,9 @@ else
         var modal = await DialogService.ShowAsync<NewProfileModal>("Add Private Key", parameters);
         var result = await modal.Result;
         if (result.Canceled) return;
-        NavigationManager.NavigateTo($"/github/{result.Data}");
+        NavigationManager.NavigateToProfile<GitHubRepositoryProfile>((string)result.Data);
     }
 
-    private void OpenProfile(TableRowClickEventArgs<GitHubRepositoryProfile> row)
-    {
-        NavigationManager.NavigateTo($"/github/{row.Item.Name}");
-    }
-
+    private void OpenProfile(TableRowClickEventArgs<GitHubRepositoryProfile> row) =>
+        NavigationManager.NavigateToProfile<GitHubRepositoryProfile>(row.Item.Name);
 }

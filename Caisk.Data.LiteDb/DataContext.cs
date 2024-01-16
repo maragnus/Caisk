@@ -11,8 +11,9 @@ public class DataContext : IDataContext
     public DataContext(string connectionString)
     {
         var database = new LiteDatabase(connectionString);
-        ApplicationStore = new ApplicationStore(database.GetCollection<ApplicationProfile>(nameof(ApplicationStore)));
-        MongoServerStore = new MongoServerStore(database.GetCollection<MongoServerProfile>(nameof(MongoServerStore)));
+        ApplicationEnvironmentStore = new ApplicationEnvironmentStore(database.GetCollection<ApplicationEnvironmentProfile>(nameof(ApplicationEnvironmentStore)));
+        ApplicationStore = new ApplicationStore(database.GetCollection<ApplicationProfile>(nameof(ApplicationStore)), ApplicationEnvironmentStore);
+        MongoDatabaseStore = new MongoDatabaseStore(database.GetCollection<MongoDatabaseProfile>("MongoServerStore"));
         SecureShellStore = new SecureShellStore(database.GetCollection<SecureShellProfile>(nameof(SecureShellStore)));
         PrivateKeyStore = new PrivateKeyStore(database.GetCollection<PrivateKeyProfile>(nameof(PrivateKeyStore)));
         RegistryStore = new RegistryStore(database.GetCollection<RegistryProfile>(nameof(RegistryStore)));
@@ -20,7 +21,8 @@ public class DataContext : IDataContext
     }
     
     public IApplicationStore ApplicationStore { get; }
-    public IMongoServerStore MongoServerStore { get; }
+    public IApplicationEnvironmentStore ApplicationEnvironmentStore { get; }
+    public IMongoDatabaseStore MongoDatabaseStore { get; }
     public ISecureShellStore SecureShellStore { get; }
     public IPrivateKeyStore PrivateKeyStore { get; }
     public IRegistryStore RegistryStore { get; }

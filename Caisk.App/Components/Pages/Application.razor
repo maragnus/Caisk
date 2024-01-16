@@ -1,8 +1,7 @@
 ﻿@page "/apps/{Name}"
 @using Caisk.Applications
+@using Caisk.Docker
 @using Caisk.GitHub
-@using Caisk.Managers.Mongo
-@using Caisk.SecureShells
 @inherits BaseProfileEditor<ApplicationProfile, IApplicationStore>
 
 @rendermode InteractiveServer
@@ -13,7 +12,7 @@
 
 <MudContainer MaxWidth="MaxWidth.Small">
     <MudText Typo="Typo.h4" GutterBottom="true">Application</MudText>
-    <MudText Class="mb-8">Configure, update, deploy application</MudText>
+    <MudText Class="mb-8">Configure applications and their environments</MudText>
 
     <MudPaper Class="pa-4">
         @if (IsLoading)
@@ -25,42 +24,30 @@
             <MudForm Model="Profile" @bind-IsValid="IsValid" @bind-IsTouched="IsTouched">
                 <MudStack Spacing="4">
                     <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
-                    <MudStack Row>
-                        <MudSelect T="string" Label="Secure Shell" @bind-Value="Profile.SecureShellName">
-                            <MudSelectItem T="string" Value="@null">No Secure Shell</MudSelectItem>
-                            @foreach (var name in _sshs)
-                            {
-                                <MudSelectItem Value="@name">
-                                    <MudIcon Icon="@Icons.Material.Filled.Terminal" Style="font-size: inherit"/> @name
-                                </MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudIconButton Icon="@Icons.Material.Filled.Terminal" Disabled="string.IsNullOrEmpty(Profile.SecureShellName)" Href="@($"/shells/{Profile.SecureShellName}")" Color="Color.Primary"/>
-                    </MudStack>
-                    <MudStack Row>
-                        <MudSelect T="string" Label="Git Hub Repository" @bind-Value="Profile.GitHubRepositoryName">
-                            <MudSelectItem T="string" Value="@null">No Repository</MudSelectItem>
-                            @foreach (var name in _sshs)
-                            {
-                                <MudSelectItem Value="@name">
-                                    <MudIcon Icon="@Icons.Custom.Brands.GitHub" Style="font-size: inherit"/> @name
-                                </MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudIconButton Icon="@Icons.Material.Filled.Key" Disabled="string.IsNullOrEmpty(Profile.GitHubRepositoryName)" Href="@($"/github/{Profile.GitHubRepositoryName}")" Color="Color.Primary"/>
-                    </MudStack>
-                    <MudStack Row>
-                        <MudSelect T="string" Label="Private Key" @bind-Value="Profile.MongoDatabaseName">
-                            <MudSelectItem T="string" Value="@null">No Mongo Database</MudSelectItem>
-                            @foreach (var name in _mongos)
-                            {
-                                <MudSelectItem Value="@name">
-                                    <MudIcon Icon="@Icons.Material.Filled.BackupTable" Style="font-size: inherit"/> @name
-                                </MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudIconButton Icon="@Icons.Material.Filled.Key" Disabled="string.IsNullOrEmpty(Profile.MongoDatabaseName)" Href="@($"/mongo/{Profile.MongoDatabaseName}")" Color="Color.Primary"/>
-                    </MudStack>
+                    <ProfileSelector T="RegistryProfile" Label="Container Registry" @bind-Value="Profile.RegistryName" Items="_registries" Icon="@Icons.Material.Filled.DirectionsBoat" OpenClicked="OpenRegistry"/>
+                    <ProfileSelector T="GitHubRepositoryProfile" Label="GitHub Repository" @bind-Value="Profile.GitHubRepositoryName" Items="_repositories" Icon="@Icons.Custom.Brands.GitHub" OpenClicked="OpenGitHub"/>
+                    <MudTable T="ApplicationEnvironmentProfile" Items="_environments" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="e => OpenEnvironment(e.Item.Name)">
+                        <HeaderContent>
+                            <MudTh>
+                                <MudTableSortLabel SortBy="new Func<ApplicationEnvironmentProfile, object>(x => x.Name)">Name</MudTableSortLabel>
+                            </MudTh>
+                            <MudTh>
+                                <MudTableSortLabel SortBy="new Func<ApplicationEnvironmentProfile, object>(x => x.Created)">Added</MudTableSortLabel>
+                            </MudTh>
+                            <MudTh>
+                                <MudTableSortLabel SortBy="new Func<ApplicationEnvironmentProfile, object>(x => x.Updated)">Updated</MudTableSortLabel>
+                            </MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Name">@context.Name</MudTd>
+                            <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
+                            <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager PageSizeOptions="new[] { 50, 100 }"/>
+                        </PagerContent>
+                    </MudTable>
+                    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@AddClick" Color="Color.Primary">Add Environment</MudButton>
                     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
                         @if (!IsNew)
                         {
@@ -78,18 +65,39 @@
 </MudContainer>
 
 @code {
-    private string[] _sshs = Array.Empty<string>(), _mongos = Array.Empty<string>(), _githubs = Array.Empty<string>();
+    private string[] _registries = Array.Empty<string>(), _repositories = Array.Empty<string>();
+    private ApplicationEnvironmentProfile[] _environments = Array.Empty<ApplicationEnvironmentProfile>();
 
-    [Inject] public ISecureShellStore SecureShellStore { get; init; } = default!;
+    [Inject] public IApplicationEnvironmentStore EnvironmentStore { get; init; } = default!;
     [Inject] public IGitHubRepositoryStore GitHubRepositoryStore { get; init; } = default!;
-    [Inject] public IMongoServerStore MongoServerStore { get; init; } = default!;
+    [Inject] public IRegistryStore RegistryStore { get; init; } = default!;
 
     protected override async Task OnSafeInitializedAsync()
     {
         await base.OnSafeInitializedAsync();
-        _sshs = await SecureShellStore.GetNames();
-        _mongos = await GitHubRepositoryStore.GetNames();
-        _githubs = await MongoServerStore.GetNames();
+        _registries = await RegistryStore.GetNames();
+        _repositories = await GitHubRepositoryStore.GetNames();
+    }
+
+    protected override async Task OnSafeParametersSetAsync()
+    {
+        await base.OnSafeParametersSetAsync();
+        _environments = await EnvironmentStore.GetAll(Profile.Name);
+    }
+
+    private void OpenGitHub(string profileName) => NavigationManager.NavigateToProfile<GitHubRepositoryProfile>(profileName);
+    private void OpenRegistry(string profileName) => NavigationManager.NavigateToProfile<RegistryProfile>(profileName);
+    private void OpenEnvironment(string profileName) => NavigationManager.NavigateToProfile<ApplicationEnvironmentProfile>(profileName, Profile.Name);
+
+    private async Task AddClick()
+    {
+        var names = await EnvironmentStore.GetNames(Profile.Name);
+        var parameters = new DialogParameters { { nameof(NewProfileModal.Names), names } };
+        var modal = await DialogService.ShowAsync<NewProfileModal>("Add Environment", parameters);
+        var result = await modal.Result;
+        if (result.Canceled) return;
+        await Save();
+        OpenEnvironment((string)result.Data);
     }
 
 }

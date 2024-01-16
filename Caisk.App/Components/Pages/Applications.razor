@@ -42,7 +42,7 @@ else
     [Inject] public IApplicationStore ProfileStore { get; set; } = default!;
 
     protected override async Task OnSafeInitializedAsync() =>
-        _profiles = await ProfileStore.Get();
+        _profiles = await ProfileStore.GetAll();
 
     private async Task AddClick()
     {
@@ -51,12 +51,9 @@ else
         var modal = await DialogService.ShowAsync<NewProfileModal>("Add Application", parameters);
         var result = await modal.Result;
         if (result.Canceled) return;
-        NavigationManager.NavigateTo($"/apps/{result.Data}");
+        NavigationManager.NavigateToProfile<ApplicationProfile>((string)result.Data);
     }
 
-    private void OpenProfile(TableRowClickEventArgs<ApplicationProfile> row)
-    {
-        NavigationManager.NavigateTo($"/apps/{row.Item.Name}");
-    }
-
+    private void OpenProfile(TableRowClickEventArgs<ApplicationProfile> row) => 
+        NavigationManager.NavigateToProfile<ApplicationProfile>(row.Item.Name);
 }

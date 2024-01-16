@@ -13,6 +13,7 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
     private bool _cancelled;
     [Inject] public TStore ProfileStore { get; set; } = default!;
     [Parameter] public string? Name { get; set; }
+    [Parameter] public string? ParentName { get; set; }
     protected TProfile Profile { get; set; } = default!;
     protected bool IsValid { get; set; }
     protected bool IsTouched { get; set; }
@@ -27,12 +28,10 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
     protected void Cancel()
     {
         _cancelled = true;
-        var path = new UriBuilder(NavigationManager.Uri).Path;
-        var parent = path[..path.IndexOf('/', 1)];
-        NavigationManager.NavigateTo(parent);
+        NavigationManager.NavigateToProfileList<TProfile>(ParentName);
     }
 
-    protected override async Task OnSafeInitializedAsync()
+    protected override async Task OnSafeParametersSetAsync()
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
@@ -40,9 +39,9 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
             return;
         }
 
-        var profile = await ProfileStore.Get(Name);
+        var profile = await ProfileStore.Get(Name, ParentName);
         IsNew = profile == null;
-        Profile = profile ?? await ProfileStore.Create(Name);
+        Profile = profile ?? await ProfileStore.Create(Name, ParentName);
     }
     
     protected async Task Save()
@@ -63,7 +62,7 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
     {
         var result = await DialogService.ShowMessageBox($"Delete {ProfileStore.Name} Profile", "Are you sure that you would like to delete this profile?", "Yes", "No", "Cancel");
         if (result != true) return;
-        await ProfileStore.Delete(Profile.Name);
+        await ProfileStore.Delete(Profile.Name, Profile.ParentName);
         Cancel();
     }
     
@@ -78,7 +77,7 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
         var modal = await DialogService.ShowAsync<NewProfileModal>("Rename " + ProfileStore.Name, parameters);
         var result = await modal.Result;
         if (result.Canceled) return;
-        await ProfileStore.Rename(Profile.Name, (string)result.Data);
+        await ProfileStore.Rename(Profile.Name, (string)result.Data, Profile.ParentName);
         Cancel();
     }
     

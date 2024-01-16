@@ -1,0 +1,55 @@
+﻿@using Caisk.Objects
+@typeparam T where T : Caisk.Objects.ObjectProfile, new()
+@inject NavigationManager NavigationManager
+ 
+<MudStack Row>
+    <MudSelect T="string" Label="@Label" @bind-Value="Value">
+        <MudSelectItem T="string" Value="@null">No Profile</MudSelectItem>
+        @foreach (var name in Items)
+        {
+            <MudSelectItem Value="@name">
+                <MudIcon Icon="@Icon" Style="font-size: inherit"/> @name
+            </MudSelectItem>
+        }
+    </MudSelect>
+    <MudIconButton Icon="@Icon" Disabled="string.IsNullOrEmpty(Value)" OnClick="@OpenClick" Color="Color.Primary"/>
+</MudStack>
+
+@code {
+    private string? _value;
+    [Inject] public IObjectProfileStore<T> Store { get; init; } = default!;
+    
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public string[] Items { get; set; } = Array.Empty<string>();
+    [Parameter] public string? ParentName { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public EventCallback<string> OpenClicked { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        Items = await Store.GetNames(ParentName);
+    }
+
+    [Parameter]
+    public string? Value
+    {
+        get => _value;
+        set
+        {
+            if (_value == value) return;
+            _value = value;
+            ValueChanged.InvokeAsync(value);
+        }
+    }
+    
+    private async Task OpenClick()
+    {
+        if (OpenClicked.HasDelegate)
+            await OpenClicked.InvokeAsync(Value);
+        else if (!string.IsNullOrWhiteSpace(Value))
+            NavigationManager.NavigateToProfile<T>(Value, ParentName);
+    }
+        
+}

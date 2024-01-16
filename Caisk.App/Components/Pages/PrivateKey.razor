@@ -32,7 +32,7 @@
                         <MudChipSet>
                             @foreach (var ssh in _secureShells)
                             {
-                                <MudChip Icon="@Icons.Material.Filled.Terminal" OnClick="() => GoToShell(ssh)">@ssh</MudChip>
+                                <MudChip Icon="@Icons.Material.Filled.Terminal" OnClick="@(() => GoToShell(ssh))">@ssh</MudChip>
                             }
                         </MudChipSet>
                     </MudField>
@@ -54,16 +54,16 @@
 </MudContainer>
 
 @code {
-
     private string[] _secureShells = Array.Empty<string>();
     [Inject] public ISecureShellStore SecureShellStore { get; init; } = default!;
 
     protected override async Task OnSafeParametersSetAsync()
     {
+        await base.OnSafeParametersSetAsync();
         var secureShells = await SecureShellStore.GetUsingPrivateKey(Profile.Name);
         _secureShells = secureShells.Select(ssh => ssh.Name).ToArray();
     }
 
     private void GoToShell(string ssh) =>
-        NavigationManager.NavigateTo($"/shells/{ssh}");
+        NavigationManager.NavigateToProfile<SecureShellProfile>(ssh);
 }

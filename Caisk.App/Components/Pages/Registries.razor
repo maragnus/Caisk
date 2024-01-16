@@ -45,7 +45,7 @@ else
     [Inject] public IRegistryStore ProfileStore { get; set; } = default!;
 
     protected override async Task OnSafeInitializedAsync() =>
-        _profiles = await ProfileStore.Get();
+        _profiles = await ProfileStore.GetAll();
 
     private async Task AddClick()
     {
@@ -54,12 +54,10 @@ else
         var modal = await DialogService.ShowAsync<NewProfileModal>("Add Registry", parameters);
         var result = await modal.Result;
         if (result.Canceled) return;
-        NavigationManager.NavigateTo($"/registries/{result.Data}");
+        NavigationManager.NavigateToProfile<RegistryProfile>((string)result.Data);
     }
 
-    private void OpenProfile(TableRowClickEventArgs<RegistryProfile> row)
-    {
-        NavigationManager.NavigateTo($"/registries/{row.Item.Name}");
-    }
+    private void OpenProfile(TableRowClickEventArgs<RegistryProfile> row) =>
+        NavigationManager.NavigateToProfile<RegistryProfile>(row.Item.Name);
 
 }

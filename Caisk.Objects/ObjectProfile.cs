@@ -4,6 +4,7 @@ public abstract class ObjectProfile
 {
     public string Id { get; init; } = default!;
     public string Name { get; init; } = default!;
+    public string? ParentName { get; set; }
     public DateTime Created { get; set; }
     public DateTime Updated { get; set; }
     
