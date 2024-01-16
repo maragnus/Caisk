@@ -10,6 +10,7 @@ public interface IObjectProfileStore<TProfile> where TProfile : ObjectProfile, n
     ValueTask<TProfile?> Get(string name);
     ValueTask<TProfile[]> Get(params string[] name);
     ValueTask<TProfile[]> Get();
+    ValueTask<string[]> GetNames();
 }
 
 public class ProfileStoreException : Exception

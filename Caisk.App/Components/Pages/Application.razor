@@ -1,11 +1,15 @@
 ﻿@page "/apps/{Name}"
 @using Caisk.Applications
+@using Caisk.GitHub
+@using Caisk.Managers.Mongo
+@using Caisk.SecureShells
 @inherits BaseProfileEditor<ApplicationProfile, IApplicationStore>
 
 @rendermode InteractiveServer
 
 <MyMudProviders/>
 <PageTitle>Application: @Name (Caisk)</PageTitle>
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" ConfirmExternalNavigation="IsTouched"/>
 
 <MudContainer MaxWidth="MaxWidth.Small">
     <MudText Typo="Typo.h4" GutterBottom="true">Application</MudText>
@@ -18,18 +22,54 @@
         }
         else
         {
-            <MudForm Model="Profile" @bind-IsValid="IsValid">
+            <MudForm Model="Profile" @bind-IsValid="IsValid" @bind-IsTouched="IsTouched">
                 <MudStack Spacing="4">
                     <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
-
+                    <MudStack Row>
+                        <MudSelect T="string" Label="Secure Shell" @bind-Value="Profile.SecureShellName">
+                            <MudSelectItem T="string" Value="@null">No Secure Shell</MudSelectItem>
+                            @foreach (var name in _sshs)
+                            {
+                                <MudSelectItem Value="@name">
+                                    <MudIcon Icon="@Icons.Material.Filled.Terminal" Style="font-size: inherit"/> @name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudIconButton Icon="@Icons.Material.Filled.Terminal" Disabled="string.IsNullOrEmpty(Profile.SecureShellName)" Href="@($"/shells/{Profile.SecureShellName}")" Color="Color.Primary"/>
+                    </MudStack>
+                    <MudStack Row>
+                        <MudSelect T="string" Label="Git Hub Repository" @bind-Value="Profile.GitHubRepositoryName">
+                            <MudSelectItem T="string" Value="@null">No Repository</MudSelectItem>
+                            @foreach (var name in _sshs)
+                            {
+                                <MudSelectItem Value="@name">
+                                    <MudIcon Icon="@Icons.Custom.Brands.GitHub" Style="font-size: inherit"/> @name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudIconButton Icon="@Icons.Material.Filled.Key" Disabled="string.IsNullOrEmpty(Profile.GitHubRepositoryName)" Href="@($"/github/{Profile.GitHubRepositoryName}")" Color="Color.Primary"/>
+                    </MudStack>
+                    <MudStack Row>
+                        <MudSelect T="string" Label="Private Key" @bind-Value="Profile.MongoDatabaseName">
+                            <MudSelectItem T="string" Value="@null">No Mongo Database</MudSelectItem>
+                            @foreach (var name in _mongos)
+                            {
+                                <MudSelectItem Value="@name">
+                                    <MudIcon Icon="@Icons.Material.Filled.BackupTable" Style="font-size: inherit"/> @name
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudIconButton Icon="@Icons.Material.Filled.Key" Disabled="string.IsNullOrEmpty(Profile.MongoDatabaseName)" Href="@($"/mongo/{Profile.MongoDatabaseName}")" Color="Color.Primary"/>
+                    </MudStack>
                     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
                         @if (!IsNew)
                         {
-                            <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="@Delete" Color="Color.Error" Variant="Variant.Filled">Delete</MudButton>
+                            <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="@Delete" Color="Color.Error">Delete</MudButton>
+                            <MudButton StartIcon="@Icons.Material.Filled.Edit" OnClick="@Rename" Color="Color.Warning">Rename</MudButton>
                             <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
                         }
-                        <MudButton OnClick="@Return" Color="Color.Error">Cancel</MudButton>
-                        <MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="@Store" Color="Color.Primary" Variant="Variant.Filled" Disabled="!IsValid">Store</MudButton>
+                        <MudButton OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="@SaveAndClose" Color="Color.Primary" Variant="Variant.Filled" Disabled="!IsValid">Store</MudButton>
                     </MudStack>
                 </MudStack>
             </MudForm>
@@ -38,4 +78,18 @@
 </MudContainer>
 
 @code {
+    private string[] _sshs = Array.Empty<string>(), _mongos = Array.Empty<string>(), _githubs = Array.Empty<string>();
+
+    [Inject] public ISecureShellStore SecureShellStore { get; init; } = default!;
+    [Inject] public IGitHubRepositoryStore GitHubRepositoryStore { get; init; } = default!;
+    [Inject] public IMongoServerStore MongoServerStore { get; init; } = default!;
+
+    protected override async Task OnSafeInitializedAsync()
+    {
+        await base.OnSafeInitializedAsync();
+        _sshs = await SecureShellStore.GetNames();
+        _mongos = await GitHubRepositoryStore.GetNames();
+        _githubs = await MongoServerStore.GetNames();
+    }
+
 }

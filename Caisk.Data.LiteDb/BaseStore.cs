@@ -11,12 +11,12 @@ internal abstract class BaseStore<TProfile>(ILiteCollection<TProfile> collection
     public virtual string Name { get; } = typeof(TProfile).Name;
 
     public ValueTask<TProfile> Create(string name) => ValueTask.FromResult(new TProfile()
-        {
-            Name = name, 
-            Id = ObjectId.NewObjectId().ToString(),
-            Created = DateTime.UtcNow,
-            Updated = DateTime.UtcNow
-        });
+    {
+        Name = name,
+        Id = ObjectId.NewObjectId().ToString(),
+        Created = DateTime.UtcNow,
+        Updated = DateTime.UtcNow
+    });
 
     public Task Store(TProfile profile)
     {
@@ -29,9 +29,9 @@ internal abstract class BaseStore<TProfile>(ILiteCollection<TProfile> collection
     {
         if (await Get(newName) is not null)
             throw new DataContextNameConflictException<TProfile>(oldName, newName);
-        
+
         var profile = await Get(oldName)
-            ?? throw new DataContextNotFoundException<TProfile>(oldName);
+                      ?? throw new DataContextNotFoundException<TProfile>(oldName);
 
         profile.GetType().GetProperty(nameof(ObjectProfile.Name))!.GetSetMethod(true)!.Invoke(profile, [newName]);
         profile.Updated = DateTime.Now;
@@ -41,7 +41,7 @@ internal abstract class BaseStore<TProfile>(ILiteCollection<TProfile> collection
     public async Task Delete(string name)
     {
         var profile = await Get(name)
-                   ?? throw new DataContextNotFoundException<TProfile>(name);
+                      ?? throw new DataContextNotFoundException<TProfile>(name);
 
         Collection.Delete(profile.Id);
     }
@@ -49,7 +49,12 @@ internal abstract class BaseStore<TProfile>(ILiteCollection<TProfile> collection
     public ValueTask<TProfile?> Get(string name) =>
         ValueTask.FromResult(Collection.FindOne(p => p.Name == name))!;
 
-    public ValueTask<TProfile[]> Get(params string[] name) => ValueTask.FromResult(Collection.Find(p => name.Contains(p.Name)).ToArray());
+    public ValueTask<TProfile[]> Get(params string[] name) =>
+        ValueTask.FromResult(Collection.Find(p => name.Contains(p.Name)).ToArray());
 
-    public ValueTask<TProfile[]> Get() => ValueTask.FromResult(Collection.FindAll().ToArray());
+    public ValueTask<TProfile[]> Get() => 
+        ValueTask.FromResult(Collection.FindAll().ToArray());
+
+    public ValueTask<string[]> GetNames() => 
+        ValueTask.FromResult(Collection.FindAll().Select(p => p.Name).ToArray());
 }

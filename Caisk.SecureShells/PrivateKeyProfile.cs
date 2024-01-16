@@ -1,6 +1,7 @@
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Crypto.Signers;
 using Org.BouncyCastle.Crypto.Utilities;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
@@ -17,7 +18,7 @@ public class PrivateKeyProfile : ObjectProfile
 
     private const int DsaCertainty = 100;
 
-    public static PrivateKeyProfile Generate(string name, PrivateKeyType type, int? bits = null)
+    public static PrivateKeyProfile Generate(string id, string name, PrivateKeyType type, int? bits = null)
     {
         ValidateName(name);
         
@@ -36,7 +37,7 @@ public class PrivateKeyProfile : ObjectProfile
             _ => throw new ArgumentOutOfRangeException(nameof(type), $"{type} is not supported")
         };
 
-        return CreatePrivateKeyProfile(name, type, keyPair);
+        return CreatePrivateKeyProfile(id, name, type, keyPair);
     }
 
     private static AsymmetricCipherKeyPair GenerateRsaPrivate(int bits)
@@ -73,7 +74,7 @@ public class PrivateKeyProfile : ObjectProfile
         return generator.GenerateKeyPair();
     }
 
-    private static PrivateKeyProfile CreatePrivateKeyProfile(string name, PrivateKeyType type,
+    private static PrivateKeyProfile CreatePrivateKeyProfile(string id, string name, PrivateKeyType type,
         AsymmetricCipherKeyPair keyPair)
     {
         var publicKey = GeneratePrivateKey(keyPair, type);
@@ -82,6 +83,7 @@ public class PrivateKeyProfile : ObjectProfile
         var now = DateTime.Now;
         return new PrivateKeyProfile
         {
+            Id = id,
             Name = name,
             Created = now,
             Updated = now,
@@ -112,6 +114,11 @@ public class PrivateKeyProfile : ObjectProfile
 
     private static string GeneratePublicKey(string name, AsymmetricCipherKeyPair keyPair, PrivateKeyType type)
     {
+        if (type == PrivateKeyType.Ed22519)
+        {
+            return Convert.ToBase64String(OpenSshPublicKeyUtilities.EncodePublicKey(keyPair.Public));
+        }
+        
         var keyInfo = PrivateKeyInfoFactory.CreatePrivateKeyInfo(keyPair.Private);
         return Convert.ToBase64String(keyInfo.GetDerEncoded());
     }

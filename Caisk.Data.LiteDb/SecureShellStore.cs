@@ -7,6 +7,8 @@ internal class SecureShellStore(ILiteCollection<SecureShellProfile> collection)
 {
     public override string Name => "Secure Shell";
 
-    public SecureShellProfile[] GetUsingPrivateKey(string privateKeyName) =>
-        Collection.Find(profile => profile.KeyPairNames.Contains(privateKeyName)).ToArray();
+    public Task<SecureShellProfile[]> GetUsingPrivateKey(string privateKeyName) => 
+        Task.FromResult(Collection
+            .Find(profile => profile.KeyPairName == privateKeyName)
+            .ToArray());
 }

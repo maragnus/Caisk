@@ -6,7 +6,7 @@ public class PrivateKeyTests
     [TestMethod]
     public void GenerateRsa_Works()
     {
-        var ppk = PrivateKeyProfile.Generate("Test", PrivateKeyType.Rsa, 2048);
+        var ppk = PrivateKeyProfile.Generate("id", "Test", PrivateKeyType.Rsa, 2048);
         var privateKey = ppk.ToPrivateKey();
         var publicKey = ppk.ToPublicKey()!;
         
@@ -17,7 +17,7 @@ public class PrivateKeyTests
     [TestMethod]
     public void GenerateDsa_Works()
     {
-        var ppk = PrivateKeyProfile.Generate("Test", PrivateKeyType.Dsa, 1024);
+        var ppk = PrivateKeyProfile.Generate("id", "Test", PrivateKeyType.Dsa, 1024);
         var privateKey = ppk.ToPrivateKey();
         var publicKey = ppk.ToPublicKey();
         
@@ -29,7 +29,7 @@ public class PrivateKeyTests
     [ExpectedException(typeof(InvalidOperationException))]
     public void GenerateEcdsa_Works()
     {
-        var ppk = PrivateKeyProfile.Generate("Test", PrivateKeyType.Ecdsa, 512);
+        var ppk = PrivateKeyProfile.Generate("id", "Test", PrivateKeyType.Ecdsa, 512);
         var privateKey = ppk.ToPrivateKey();
         var publicKey = ppk.ToPublicKey();
         
@@ -40,7 +40,7 @@ public class PrivateKeyTests
     [TestMethod]
     public void GenerateEd22519_Works()
     {
-        var ppk = PrivateKeyProfile.Generate("Test", PrivateKeyType.Ed22519);
+        var ppk = PrivateKeyProfile.Generate("id", "Test", PrivateKeyType.Ed22519);
         var privateKey = ppk.ToPrivateKey();
         var publicKey = ppk.ToPublicKey();
         

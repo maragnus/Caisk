@@ -1,5 +1,6 @@
 ﻿using Caisk.Applications;
 using Caisk.Docker;
+using Caisk.GitHub;
 using Caisk.Managers.Mongo;
 using Caisk.SecureShells;
 
@@ -12,4 +13,5 @@ public interface IDataContext
     ISecureShellStore SecureShellStore { get; }
     IPrivateKeyStore PrivateKeyStore { get; }
     IRegistryStore RegistryStore { get; }
+    IGitHubRepositoryStore GitHubRepositoryStore { get; }
 }

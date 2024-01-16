@@ -1,14 +1,13 @@
-﻿@page "/mongos"
+﻿@page "/mongo"
 @using Caisk.Managers.Mongo
-@using Caisk.SecureShells
 @inherits BasePage
 @rendermode InteractiveServer
 
 <MyMudProviders/>
 
-<PageTitle>Mongo Servers (Caisk)</PageTitle>
+<PageTitle>Mongo Databases (Caisk)</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Mongo Servers</MudText>
+<MudText Typo="Typo.h4" GutterBottom="true">Mongo Databases</MudText>
 <MudText Class="mb-8">Manage mongo servers, databases, and credentials</MudText>
 
 @if (IsLoading)
@@ -19,16 +18,18 @@ else
 {
     <MudTable T="MongoServerProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.HostName!)">Host Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.UserName!)">User Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.HostName!)">Host Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.UserName!)">User Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.Database!)">Database</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<MongoServerProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Host Name">@context.HostName</MudTd>
             <MudTd DataLabel="User Name">@context.UserName</MudTd>
+            <MudTd DataLabel="Database">@context.Database</MudTd>
             <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
             <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
         </RowTemplate>
@@ -54,12 +55,12 @@ else
         var modal = await DialogService.ShowAsync<NewProfileModal>("Add Mongo Server", parameters);
         var result = await modal.Result;
         if (result.Canceled) return;
-        NavigationManager.NavigateTo($"/mongos/{result.Data}");
+        NavigationManager.NavigateTo($"/mongo/{result.Data}");
     }
 
     private void OpenProfile(TableRowClickEventArgs<MongoServerProfile> row)
     {
-        NavigationManager.NavigateTo($"/mongos/{row.Item.Name}");
+        NavigationManager.NavigateTo($"/mongo/{row.Item.Name}");
     }
 
 }

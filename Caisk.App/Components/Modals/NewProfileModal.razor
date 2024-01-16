@@ -3,12 +3,12 @@
 <form @onsubmit="@FormSubmit">
     <MudDialog DefaultFocus="DefaultFocus.FirstChild">
         <DialogContent>
-            <MudTextField T="string" @bind-Text="@_name" Label="Profile Name" Validation="@((object)ValidateName)" Immediate Variant="Variant.Outlined"/>
+            <MudTextField T="string" @bind-Text="@Name" Label="Profile Name" Validation="@((object)ValidateName)" Immediate Variant="Variant.Outlined"/>
             <MudAlert Severity="Severity.Info" Class="my-4">@ObjectProfileUtility.NameConstraint</MudAlert>
             <MudDivider/>
         </DialogContent>
         <DialogActions>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" OnClick="@Confirm" Disabled="!_isValid">Create</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" OnClick="@Confirm" Disabled="!_isValid">@OkButton</MudButton>
             <MudButton Color="Color.Error" OnClick="@Cancel">Cancel</MudButton>
         </DialogActions>
     </MudDialog>
@@ -18,19 +18,20 @@
     [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter] public string[] Names { get; set; } = default!;
+    [Parameter] public string? OkButton { get; set; } = "Create";
+    [Parameter] public string? Name { get; set; }
     
-    private string? _name;
     private bool _isValid;
 
     private void Confirm()
     {
-        if (ValidateName(_name) is null)
-            MudDialog.Close(DialogResult.Ok(_name));
+        if (ValidateName(Name) is null)
+            MudDialog.Close(DialogResult.Ok(Name));
     }
 
     private void Cancel() => MudDialog.Close(DialogResult.Cancel());
 
-    public string? ValidateName(string? name)
+    private string? ValidateName(string? name)
     {
         _isValid = false;
         if (string.IsNullOrWhiteSpace(name))

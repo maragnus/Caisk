@@ -1,0 +1,93 @@
+﻿@using Caisk.Objects
+@using Caisk.SecureShells
+
+<form @onsubmit="@FormSubmit">
+    <MudDialog DefaultFocus="DefaultFocus.FirstChild">
+        <DialogContent>
+            <MudTextField T="string" @bind-Text="@_name" Label="Profile Name" Validation="@((object)ValidateName)" Immediate Variant="Variant.Outlined"/>
+            <MudRadioGroup T="PrivateKeyType" @bind-Value="@_type">
+                <MudRadio Option="PrivateKeyType.Dsa">DSA</MudRadio>
+                <MudRadio Option="PrivateKeyType.Rsa">RSA</MudRadio>
+                <MudRadio Option="PrivateKeyType.Ecdsa">ECDSA</MudRadio>
+                <MudRadio Option="PrivateKeyType.Ed22519">ED22519</MudRadio>
+            </MudRadioGroup>
+            @if (_type == PrivateKeyType.Rsa)
+            {
+                <MudSelect T="int" Label="Bits" @bind-Value="@_bits" Variant="Variant.Outlined" Required>
+                    <MudSelectItem Value="2048">2048</MudSelectItem>
+                    <MudSelectItem Value="2560">2560</MudSelectItem>
+                    <MudSelectItem Value="3072">3072</MudSelectItem>
+                    <MudSelectItem Value="3584">3584</MudSelectItem>
+                    <MudSelectItem Value="4096">4096</MudSelectItem>
+                    <MudSelectItem Value="8192">8192</MudSelectItem>
+                    <MudSelectItem Value="16384">16384</MudSelectItem>
+                </MudSelect>
+            } else if (_type == PrivateKeyType.Dsa)
+            {
+                <MudSelect T="int" Label="Bits" @bind-Value="@_bits" Variant="Variant.Outlined" Required>
+                    <MudSelectItem Value="512">512</MudSelectItem>
+                    <MudSelectItem Value="576">576</MudSelectItem>
+                    <MudSelectItem Value="640">640</MudSelectItem>
+                    <MudSelectItem Value="704">704</MudSelectItem>
+                    <MudSelectItem Value="768">768</MudSelectItem>
+                </MudSelect>
+            } else if (_type == PrivateKeyType.Ecdsa)
+            {
+                <MudSelect T="int" Label="Bits" @bind-Value="@_bits" Variant="Variant.Outlined" Required>
+                    <MudSelectItem Value="160">160</MudSelectItem>
+                    <MudSelectItem Value="192">192</MudSelectItem>
+                    <MudSelectItem Value="224">224</MudSelectItem>
+                    <MudSelectItem Value="256">256</MudSelectItem>
+                    <MudSelectItem Value="384">384</MudSelectItem>
+                    <MudSelectItem Value="521">521</MudSelectItem>
+                </MudSelect>
+            }
+            <MudAlert Severity="Severity.Info" Class="my-4">@ObjectProfileUtility.NameConstraint</MudAlert>
+            <MudDivider/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" OnClick="@Confirm" Disabled="!_isNameValid">Create</MudButton>
+            <MudButton Color="Color.Error" OnClick="@Cancel">Cancel</MudButton>
+        </DialogActions>
+    </MudDialog>
+</form>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public string[] Names { get; set; } = default!;
+    
+    private string? _name;
+    private bool _isNameValid;
+    private PrivateKeyType _type = PrivateKeyType.Ed22519;
+    private int _bits = 4096;
+
+    private void Confirm()
+    {
+        if (_name != null && ValidateName(_name) is null)
+            MudDialog.Close(DialogResult.Ok(new Result(_name, _type, _bits)));
+    }
+    
+    private void FormSubmit() => Confirm();
+
+    private void Cancel() => MudDialog.Close(DialogResult.Cancel());
+
+    private string? ValidateName(string? name)
+    {
+        _isNameValid = false;
+        if (string.IsNullOrWhiteSpace(name))
+            return "Name is required";
+
+        if (!ObjectProfileUtility.IsNameValid(name))
+            return "Name format is incorrect";
+
+        if (Names.Contains(name))
+            return "Name already exists";
+
+        _isNameValid = true;
+        return null;
+    }
+
+
+    public record Result(string Name, PrivateKeyType Type, int Bits);
+}

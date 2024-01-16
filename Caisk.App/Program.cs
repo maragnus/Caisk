@@ -3,6 +3,7 @@ using Caisk.Applications;
 using Caisk.Data;
 using Caisk.Data.LiteDb;
 using Caisk.Docker;
+using Caisk.GitHub;
 using Caisk.Managers.Mongo;
 using Caisk.SecureShells;
 using MudBlazor.Services;
@@ -20,6 +21,8 @@ var builder = WebApplication.CreateBuilder(args);
     services.AddSingleton<ISecureShellStore>(sp => sp.GetRequiredService<IDataContext>().SecureShellStore);
     services.AddSingleton<IPrivateKeyStore>(sp => sp.GetRequiredService<IDataContext>().PrivateKeyStore);
     services.AddSingleton<IMongoServerStore>(sp => sp.GetRequiredService<IDataContext>().MongoServerStore);
+    services.AddSingleton<IGitHubRepositoryStore>(sp => sp.GetRequiredService<IDataContext>().GitHubRepositoryStore);
+    services.AddSingleton<SecureShellManager>();
 }
 
 var app = builder.Build();

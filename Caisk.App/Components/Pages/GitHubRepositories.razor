@@ -1,0 +1,66 @@
+﻿@page "/github"
+@using Caisk.GitHub
+@inherits BasePage
+@rendermode InteractiveServer
+
+<MyMudProviders/>
+
+<PageTitle>GitHub Repositories (Caisk)</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">GitHub Repositories</MudText>
+<MudText Class="mb-8">Manage GitHub Repositories</MudText>
+
+@if (IsLoading)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
+}
+else
+{
+    <MudTable T="GitHubRepositoryProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x=>x.OrganizationName!)">Organization</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x=>x.RepositoryName!)">Repository</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Organization">@context.OrganizationName</MudTd>
+            <MudTd DataLabel="Repository">@context.RepositoryName</MudTd>
+            <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
+            <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new[]{50, 100}"/>
+        </PagerContent>
+    </MudTable>
+    <MudStack Row Spacing="4">
+        <MudButton StartIcon="@Icons.Material.Filled.Key" OnClick="AddClick" Color="Color.Primary">Add GitHub Repository</MudButton>
+    </MudStack>
+}
+
+@code {
+    private GitHubRepositoryProfile[] _profiles = Array.Empty<GitHubRepositoryProfile>();
+
+    [Inject] public IGitHubRepositoryStore ProfileStore { get; set; } = default!;
+
+    protected override async Task OnSafeInitializedAsync() =>
+        _profiles = await ProfileStore.Get();
+
+    private async Task AddClick()
+    {
+        var names = _profiles.Select(p => p.Name).ToArray();
+        var parameters = new DialogParameters { { nameof(NewProfileModal.Names), names } };
+        var modal = await DialogService.ShowAsync<NewProfileModal>("Add Private Key", parameters);
+        var result = await modal.Result;
+        if (result.Canceled) return;
+        NavigationManager.NavigateTo($"/github/{result.Data}");
+    }
+
+    private void OpenProfile(TableRowClickEventArgs<GitHubRepositoryProfile> row)
+    {
+        NavigationManager.NavigateTo($"/github/{row.Item.Name}");
+    }
+
+}

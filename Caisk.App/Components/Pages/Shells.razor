@@ -32,7 +32,7 @@ else
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Host Name">@context.HostName</MudTd>
             <MudTd DataLabel="User Name">@context.UserName</MudTd>
-            <MudTd DataLabel="Key Pairs">@(string.Join(", ", context.KeyPairNames))</MudTd>
+            <MudTd DataLabel="Key Pair">@context.KeyPairName</MudTd>
             <MudTd DataLabel="Machine Info">@context.MachineInfo</MudTd>
             <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
             <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>

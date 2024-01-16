@@ -1,14 +1,17 @@
 ﻿@page "/shells/{Name}"
 @using Caisk.SecureShells
+@using Renci.SshNet
+@using System.Text.RegularExpressions
 @inherits BaseProfileEditor<SecureShellProfile, ISecureShellStore>
 
 @rendermode InteractiveServer
 
 <MyMudProviders/>
 <PageTitle>Secure Shell: @Name (Caisk)</PageTitle>
+<NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" ConfirmExternalNavigation="IsTouched"/>
 
-<MudContainer MaxWidth="MaxWidth.Small">
-    <MudText Typo="Typo.h4" GutterBottom="true">Secure Shells</MudText>
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudText Typo="Typo.h4" GutterBottom="true">Secure Shell</MudText>
     <MudText Class="mb-8">Configure SSH connection</MudText>
 
     <MudPaper Class="pa-4">
@@ -18,25 +21,108 @@
         }
         else
         {
-            <MudForm Model="Profile" @bind-IsValid="IsValid">
-                <MudStack Spacing="4">
-                    <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
-                    <MudTextField Label="Host Name" Required Immediate InputType="InputType.Text" @bind-Value="Profile.HostName"/>
-                    <MudTextField Label="User Name" Immediate InputType="InputType.Text" @bind-Value="Profile.UserName"/>
-                    <MudTextField Label="User Password" Immediate InputType="InputType.Password" @bind-Value="Profile.Password"/>
-                    <MudTextField Label="Root Password" Immediate InputType="InputType.Password" @bind-Value="Profile.RootPassword"/>
-
-                    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
-                        @if (!IsNew)
+            <MudForm Model="Profile" @bind-IsValid="IsValid" @bind-IsTouched="IsTouched">
+                <MudGrid>
+                    <MudItem sm="12" md="6">
+                        <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
+                        <MudTextField Label="Host Name" Required Immediate InputType="InputType.Text" @bind-Value="Profile.HostName"/>
+                        <MudTextField Label="User Name" Immediate InputType="InputType.Text" @bind-Value="Profile.UserName"/>
+                        <MudTextField Label="Machine Info" ReadOnly @bind-Value="Profile.MachineInfo"/>
+                        <MudTextField Label="Fingerprint" ReadOnly @bind-Value="Profile.Fingerprint"/>
+                    </MudItem>
+                    <MudItem sm="12" md="6">
+                        <MudTextField Label="User Password" Immediate InputType="InputType.Password" @bind-Value="Profile.Password"/>
+                        <MudTextField Label="Root Password" Immediate InputType="InputType.Password" @bind-Value="Profile.RootPassword"/>
+                        <MudStack Row>
+                            <MudSelect T="string" Label="Private Key" @bind-Value="Profile.KeyPairName">
+                                <MudSelectItem T="string" Value="@null">No Private Key</MudSelectItem>
+                                @foreach (var keyName in _privateKeys)
+                                {
+                                    <MudSelectItem Value="@keyName">
+                                        <MudIcon Icon="@Icons.Material.Filled.Key" Style="font-size: inherit"/> @keyName
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudIconButton Icon="@Icons.Material.Filled.Key" Disabled="string.IsNullOrEmpty(Profile.KeyPairName)" OnClick="@OpenKey" Color="Color.Primary"/>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
+                    <MudButton StartIcon="@Icons.Material.Filled.PlayCircle" OnClick="@Test" Disabled="_isTesting" Color="Color.Info">
+                        @if (_isTesting)
                         {
-                            <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="@Delete" Color="Color.Error" Variant="Variant.Filled">Delete</MudButton>
-                            <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
+                            <MudProgressCircular Color="Color.Default" Indeterminate="true" Size="Size.Small"/>
                         }
-                        <MudButton OnClick="@Return" Color="Color.Error">Cancel</MudButton>
-                        <MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="@Store" Color="Color.Primary" Variant="Variant.Filled" Disabled="!IsValid">Store</MudButton>
-                    </MudStack>
+                        Test
+                    </MudButton>
+                    <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
+                    @if (!IsNew)
+                    {
+                        <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="@Delete" Color="Color.Error">Delete</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.Edit" OnClick="@Rename" Color="Color.Warning">Rename</MudButton>
+                        <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
+                    }
+                    <MudButton OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
+                    <MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="@SaveAndClose" Color="Color.Primary" Variant="Variant.Filled" Disabled="!IsValid">Store</MudButton>
                 </MudStack>
             </MudForm>
         }
     </MudPaper>
 </MudContainer>
+
+
+@code {
+    private string[] _privateKeys = Array.Empty<string>();
+    private bool _isTesting;
+    [Inject] public IPrivateKeyStore PrivateKeyStore { get; init; } = default!;
+    [Inject] public SecureShellManager SecureShellManager { get; init; } = default!;
+
+    protected override async Task OnSafeParametersSetAsync()
+    {
+        _privateKeys = await PrivateKeyStore.GetNames();
+    }
+
+    private void OpenKey() =>
+        NavigationManager.NavigateTo($"/keys/{Profile.KeyPairName}");
+
+    private async Task Test()
+    {
+        _isTesting = true;
+        StateHasChanged();
+
+        if (IsTouched) await Save();
+
+        await SafeActionAsync(async () =>
+        {
+            var shell = await SecureShellManager.CreateSecureShell(Profile.Name);
+            await using var ssh = await shell.ConnectAsync();
+            var uNameResult = await ssh.SendCommandAsync("uname -a");
+            if (uNameResult.ExitCode != 0)
+                throw new Exception($"uname -a exited with {uNameResult.ExitCode} error code: {uNameResult.Error}");
+            Profile.MachineInfo = uNameResult.Result;
+            Profile.Fingerprint = ssh.FingerPrint;
+            await Save();
+
+            if (!string.IsNullOrWhiteSpace(Profile.RootPassword))
+            {
+                var result = await ssh.SendStreamAsync((stream, token) =>
+                {
+                    stream.WriteLine("su - root");
+                    stream.Expect("Password:");
+                    stream.WriteLine(Profile.RootPassword);
+                    var result = stream.Expect(new Regex("(Authentication failure|#)", RegexOptions.IgnoreCase));
+                    if (result.Contains("Authentication failure"))
+                        return new CommandResult(-1, "", result);
+                    return new CommandResult(0, "", "");
+                }, CancellationToken.None);
+
+                if (result.ExitCode != 0)
+                    throw new Exception($"Failed to su root: {result.Error}");
+            }
+
+            await DialogService.ShowMessageBox("Secure Shell Test", "Test was successful.");
+        });
+        _isTesting = false;
+    }
+
+}

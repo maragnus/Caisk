@@ -1,3 +1,5 @@
+using Renci.SshNet.Common;
+
 namespace Caisk.SecureShells;
 
 [PublicAPI]
@@ -7,6 +9,7 @@ public class SshClientAsync : IAsyncDisposable
     private readonly BlockingCollection<SshAction> _queue = new(new ConcurrentQueue<SshAction>());
     private Task? _thread;
     private CancellationTokenSource? _cancellationSource;
+    public string? FingerPrint { get; private set; }
 
     private abstract class SshAction
     {
@@ -65,6 +68,23 @@ public class SshClientAsync : IAsyncDisposable
         }
     }
 
+    private class SshStreamAction : SshAction
+    {
+        private readonly Func<ShellStream, CancellationToken, CommandResult> _action;
+        public CommandResult Result { get; private set; } = null!;
+        
+        public SshStreamAction(Func<ShellStream, CancellationToken, CommandResult> action, CancellationToken cancellationToken) : base(cancellationToken)
+        {
+            _action = action;
+        }
+
+        protected override void Run(SshClient ssh, CancellationToken cancellationToken)
+        {
+            using var shellStream = ssh.CreateShellStream("xterm", 80, 25, 800, 600, 1024);
+            Result = _action.Invoke(shellStream, cancellationToken);
+        }
+    }
+    
     private class SshCommandAction : SshAction
     {
         private readonly string _action;
@@ -99,8 +119,15 @@ public class SshClientAsync : IAsyncDisposable
     public SshClientAsync(ConnectionInfo connectionInfo)
     {
         _sshClient = new SshClient(connectionInfo);
+        _sshClient.HostKeyReceived += HostKeyReceived;
     }
 
+    private void HostKeyReceived(object? sender, HostKeyEventArgs e)
+    {
+        FingerPrint = Convert.ToHexString(e.FingerPrint);
+        e.CanTrust = true;
+    }
+    
     private void ThreadProc(SshClient ssh, CancellationToken cancellationToken)
     {
         try
@@ -156,6 +183,15 @@ public class SshClientAsync : IAsyncDisposable
         return action.Result;
     }
 
+    public async Task<CommandResult> SendStreamAsync(Func<ShellStream, CancellationToken, CommandResult> callback,
+        CancellationToken cancellationToken = default)
+    {
+        var action = new SshStreamAction(callback, cancellationToken);
+        _queue.Add(action, cancellationToken);
+        await action.Task;
+        return action.Result;
+    }
+    
     public async ValueTask DisposeAsync()
     {
         await DisconnectAsync();

@@ -9,7 +9,7 @@ internal class PrivateKeyStore(ILiteCollection<PrivateKeyProfile> collection)
 
     public async Task<PrivateKeyProfile> Generate(string name, PrivateKeyType type, int? bits)
     {
-        var profile = PrivateKeyProfile.Generate(name, type, bits);
+        var profile = PrivateKeyProfile.Generate(ObjectId.NewObjectId().ToString(), name, type, bits);
         await Store(profile);
         return profile;
     }

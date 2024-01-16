@@ -9,6 +9,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Caisk.Applications\Caisk.Applications.csproj" />
       <ProjectReference Include="..\Caisk.Docker\Caisk.Docker.csproj" />
+      <ProjectReference Include="..\Caisk.GitHub\Caisk.GitHub.csproj" />
       <ProjectReference Include="..\Caisk.Mongo\Caisk.Mongo.csproj" />
       <ProjectReference Include="..\Caisk.Objects\Caisk.Objects.csproj" />
       <ProjectReference Include="..\Caisk.SecureShells\Caisk.SecureShells.csproj" />

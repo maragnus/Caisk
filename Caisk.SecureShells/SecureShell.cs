@@ -11,12 +11,11 @@ public class SecureShell(SecureShellProfile profile, SecureShellManager secureSh
             methods.Add(
                 new PasswordAuthenticationMethod(profile.UserName, profile.Password));
 
-        if (profile.KeyPairNames?.Length > 0)
+        if (!string.IsNullOrWhiteSpace(profile.KeyPairName))
         {
-            var keys = await secureShellManager.PrivateKeyStore.Get(profile.KeyPairNames);
-            var privateKeys = keys.Select(x => x.ToPrivateKey()).ToArray();
-            methods.Add(
-                new PrivateKeyAuthenticationMethod(profile.UserName,privateKeys));
+            var key = await secureShellManager.PrivateKeyStore.Get(profile.KeyPairName)
+                ?? throw new KeyNotFoundException($"Private Key \"{profile.KeyPairName}\" was not found");
+            methods.Add(new PrivateKeyAuthenticationMethod(profile.UserName, key.ToPrivateKey()));
         }
         
         var connectionInfo = new ConnectionInfo(profile.HostName, profile.UserName, methods.ToArray());

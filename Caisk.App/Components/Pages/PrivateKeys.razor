@@ -5,7 +5,7 @@
 
 <MyMudProviders/>
 
-<PageTitle>Secure Shells (Caisk)</PageTitle>
+<PageTitle>Private Keys (Caisk)</PageTitle>
 
 <MudText Typo="Typo.h4" GutterBottom="true">Private Keys</MudText>
 <MudText Class="mb-8">Manage encryption keys for Secure Shell connections</MudText>
@@ -34,10 +34,7 @@ else
         </PagerContent>
     </MudTable>
     <MudStack Row Spacing="4">
-        <MudButton StartIcon="@Icons.Material.Filled.Key" OnClick="() => AddClick(PrivateKeyType.Dsa)" Color="Color.Primary">Add DSA</MudButton>
-        <MudButton StartIcon="@Icons.Material.Filled.Key" OnClick="() => AddClick(PrivateKeyType.Rsa)" Color="Color.Primary">Add RSA</MudButton>
-        <MudButton StartIcon="@Icons.Material.Filled.Key" OnClick="() => AddClick(PrivateKeyType.Ecdsa)" Color="Color.Primary">Add Ecdsa</MudButton>
-        <MudButton StartIcon="@Icons.Material.Filled.Key" OnClick="() => AddClick(PrivateKeyType.Ed22519)" Color="Color.Primary">Add Ed22519</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Key" OnClick="AddClick" Color="Color.Primary">Add Key Pair</MudButton>
     </MudStack>
 }
 
@@ -49,19 +46,22 @@ else
     protected override async Task OnSafeInitializedAsync() =>
         _profiles = await ProfileStore.Get();
 
-    private async Task AddClick(PrivateKeyType type)
+    private async Task AddClick()
     {
         var names = _profiles.Select(p => p.Name).ToArray();
-        var parameters = new DialogParameters { { nameof(NewProfileModal.Names), names } };
-        var modal = await DialogService.ShowAsync<NewProfileModal>("Add Private Key", parameters);
+        var parameters = new DialogParameters { { nameof(NewPrivateKeyModal.Names), names } };
+        var modal = await DialogService.ShowAsync<NewPrivateKeyModal>("Add Private Key", parameters);
         var result = await modal.Result;
         if (result.Canceled) return;
-        NavigationManager.NavigateTo($"/shells/{result.Data}/{type}");
+        var response = (NewPrivateKeyModal.Result)result.Data;
+        await ProfileStore.Generate(response.Name, response.Type, response.Bits);
+        
+        NavigationManager.NavigateTo($"/keys/{response.Name}");
     }
 
     private void OpenProfile(TableRowClickEventArgs<PrivateKeyProfile> row)
     {
-        NavigationManager.NavigateTo($"/shells/{row.Item.Name}");
+        NavigationManager.NavigateTo($"/keys/{row.Item.Name}");
     }
 
 }
