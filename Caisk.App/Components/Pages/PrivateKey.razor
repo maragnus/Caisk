@@ -36,7 +36,7 @@
                             }
                         </MudChipSet>
                     </MudField>
-                    
+
                     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
                         @if (!IsNew)
                         {
@@ -66,4 +66,5 @@
 
     private void GoToShell(string ssh) =>
         NavigationManager.NavigateToProfile<SecureShellProfile>(ssh);
+
 }

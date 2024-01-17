@@ -82,7 +82,6 @@ public abstract class BasePage : ComponentBase
         try
         {
             while (true)
-            {
                 try
                 {
                     await action();
@@ -93,7 +92,6 @@ public abstract class BasePage : ComponentBase
                     if (await PromptForRetry(ex) == true) continue;
                     return false;
                 }
-            }
         }
         finally
         {
@@ -110,7 +108,6 @@ public abstract class BasePage : ComponentBase
         try
         {
             while (true)
-            {
                 try
                 {
                     await action();
@@ -121,7 +118,6 @@ public abstract class BasePage : ComponentBase
                     if (await PromptForRetry(ex) == true) continue;
                     return false;
                 }
-            }
         }
         finally
         {
@@ -134,7 +130,6 @@ public abstract class BasePage : ComponentBase
         Func<Task> action)
     {
         while (true)
-        {
             try
             {
                 await action();
@@ -145,7 +140,6 @@ public abstract class BasePage : ComponentBase
                 if (await PromptForRetry(ex) == true) continue;
                 return false;
             }
-        }
     }
 
 
@@ -153,7 +147,6 @@ public abstract class BasePage : ComponentBase
         Func<Task> action, Func<Exception, Task> onFailure)
     {
         while (true)
-        {
             try
             {
                 await action();
@@ -165,7 +158,6 @@ public abstract class BasePage : ComponentBase
                 await onFailure(ex);
                 return false;
             }
-        }
     }
 
 
@@ -173,7 +165,6 @@ public abstract class BasePage : ComponentBase
         Func<Task> action, Action<Exception> onFailure)
     {
         while (true)
-        {
             try
             {
                 await action();
@@ -185,7 +176,6 @@ public abstract class BasePage : ComponentBase
                 onFailure(ex);
                 return false;
             }
-        }
     }
 
     private async Task<bool?> PromptForRetry(Exception ex, [CallerMemberName] string? methodName = null)

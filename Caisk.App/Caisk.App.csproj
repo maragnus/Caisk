@@ -8,16 +8,16 @@
 
 
     <ItemGroup>
-        <PackageReference Include="BlazorMonaco" Version="3.1.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.1" />
+        <PackageReference Include="BlazorMonaco" Version="3.1.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.1"/>
         <PackageReference Include="MudBlazor" Version="6.*"/>
     </ItemGroup>
 
 
     <ItemGroup>
-      <ProjectReference Include="..\Caisk.Data.LiteDb\Caisk.Data.LiteDb.csproj" />
-      <ProjectReference Include="..\Caisk.Data\Caisk.Data.csproj" />
-      <ProjectReference Include="..\Caisk.Deploy\Caisk.Deploy.csproj" />
+        <ProjectReference Include="..\Caisk.Data.LiteDb\Caisk.Data.LiteDb.csproj"/>
+        <ProjectReference Include="..\Caisk.Data\Caisk.Data.csproj"/>
+        <ProjectReference Include="..\Caisk.Deploy\Caisk.Deploy.csproj"/>
     </ItemGroup>
 
 </Project>

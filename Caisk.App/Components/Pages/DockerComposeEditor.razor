@@ -56,7 +56,7 @@
     {
         if (_code == _originalCode) return;
 
-        var result = await DialogService.ShowMessageBox($"Changed", "Would you like to save before leaving?", "Yes, Save Changes", "No, Abandon Changes", "Cancel");
+        var result = await DialogService.ShowMessageBox("Changed", "Would you like to save before leaving?", "Yes, Save Changes", "No, Abandon Changes", "Cancel");
         if (result == true) await Save();
         else if (result == null) context.PreventNavigation();
     }

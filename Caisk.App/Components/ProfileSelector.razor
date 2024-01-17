@@ -1,7 +1,7 @@
 ﻿@using Caisk.Objects
-@typeparam T where T : Caisk.Objects.ObjectProfile, new()
+@typeparam T where T : ObjectProfile, new()
 @inject NavigationManager NavigationManager
- 
+
 <MudStack Row>
     <MudSelect T="string" Label="@Label" @bind-Value="Value">
         <MudSelectItem T="string" Value="@null">No Profile</MudSelectItem>
@@ -18,7 +18,7 @@
 @code {
     private string? _value;
     [Inject] public IObjectProfileStore<T> Store { get; init; } = default!;
-    
+
     [Parameter] public string? Label { get; set; }
     [Parameter] public string? Icon { get; set; }
     [Parameter] public string[] Items { get; set; } = Array.Empty<string>();
@@ -45,7 +45,7 @@
             ValueChanged.InvokeAsync(value);
         }
     }
-    
+
     private async Task OpenClick()
     {
         if (OpenClicked.HasDelegate)
@@ -53,5 +53,5 @@
         else if (!string.IsNullOrWhiteSpace(Value))
             NavigationManager.NavigateToProfile<T>(Value, ParentName);
     }
-        
+
 }

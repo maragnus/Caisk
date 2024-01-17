@@ -1,56 +1,59 @@
 ﻿@page "/"
-@inherits BasePage
 @using Caisk.Applications
 @using Caisk.Deploy
 @using Caisk.Docker
 @using Caisk.GitHub
 @using Caisk.Managers.Mongo
 @using Caisk.SecureShells
+@inherits BasePage
 
 @rendermode InteractiveServer
 
 <PageTitle>Dashboard</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
-@foreach (var (app, envs) in _apps)
-{
-    <MudText Typo="Typo.h4" Class="mb-4">@app.Name</MudText>
-    <MudGrid Spacing="4">
-        @foreach (var env in envs)
-        {
-            <MudItem xs="12" sm="6" md="4" lg="3" xl="2">
-                <MudCard>
-                    <MudCardHeader>
-                        <MudText Typo="Typo.h5">@env.ParentName @env.Name</MudText>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudStack Spacing="1">
-                            @foreach (var url in env.EntryUrl?.Split(";") ?? Array.Empty<string>())
-                            {
-                                <div><MudLink Href="@url"><MudIcon Icon="@Icons.Material.Filled.Link" Style="font-size: inherit"/> @url</MudLink></div>
-                            }
-                            <MudChipSet>
-                                @foreach (var image in env.Services)
+    @foreach (var (app, envs) in _apps)
+    {
+        <MudText Typo="Typo.h4" Class="mb-4">@app.Name</MudText>
+        <MudGrid Spacing="4">
+            @foreach (var env in envs)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3" xl="2">
+                    <MudCard>
+                        <MudCardHeader>
+                            <MudText Typo="Typo.h5">@env.ParentName @env.Name</MudText>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudStack Spacing="1">
+                                @foreach (var url in env.EntryUrl?.Split(";") ?? Array.Empty<string>())
                                 {
-                                    <MudChip Icon="@Icons.Material.Filled.LocalShipping">@image.Image</MudChip>
+                                    <MudLink Href="@url">
+                                        <MudIcon Icon="@Icons.Material.Filled.Link" Style="font-size: inherit"/> @url
+                                    </MudLink>
                                 }
-                            </MudChipSet>
-                            <div><ProfileButton T="RegistryProfile" Name="@app.RegistryName"/></div>
-                            <div><ProfileButton T="GitHubRepositoryProfile" Name="@app.GitHubRepositoryName"/></div>
-                            <div><ProfileButton T="MongoDatabaseProfile" Name="@env.MongoDatabaseName"/></div>
-                            <div><ProfileButton T="SecureShellProfile" Name="@env.SecureShellName"/></div>
-                        </MudStack>
-                    </MudCardContent>
-                    <MudCardActions>
-                        <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => GoToApp(env))">Edit</MudButton>
-                        <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.RocketLaunch" OnClick="@(() => Deploy(env))">Deploy</MudButton>
-                    </MudCardActions>
-                </MudCard>
-            </MudItem>
-        }
-    </MudGrid>
-}
+                                <MudChipSet>
+                                    @foreach (var image in env.Services)
+                                    {
+                                        <MudChip Icon="@Icons.Material.Filled.LocalShipping">@image.Image</MudChip>
+                                    }
+                                </MudChipSet>
+                                <ProfileButton T="RegistryProfile" Name="@app.RegistryName"/>
+                                <ProfileButton T="GitHubRepositoryProfile" Name="@app.GitHubRepositoryName"/>
+                                <ProfileButton T="MongoDatabaseProfile" Name="@env.MongoDatabaseName"/>
+                                <ProfileButton T="SecureShellProfile" Name="@env.SecureShellName"/>
+                            </MudStack>
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => GoToApp(env))">Edit</MudButton>
+                            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.RocketLaunch" OnClick="@(() => Deploy(env))">Deploy</MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
 </MudContainer>
+
 @code {
     private ApplicationEnvironments[] _apps = Array.Empty<ApplicationEnvironments>();
 
@@ -69,12 +72,11 @@
         NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(env.Name, env.ParentName) + "/deploy");
     }
 
-    
+
     void GoToApp(ApplicationEnvironmentProfile env) =>
         NavigationManager.NavigateToProfile<ApplicationEnvironmentProfile>(env.Name, env.ParentName);
-    
+
     void GoToGitHub(string? name) => NavigationManager.NavigateToProfile<GitHubRepositoryProfile>(name);
     void GoToMongo(string? name) => NavigationManager.NavigateToProfile<MongoDatabaseProfile>(name);
     void GoToSecureShell(string? name) => NavigationManager.NavigateToProfile<SecureShellProfile>(name);
 }
-

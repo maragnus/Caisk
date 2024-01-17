@@ -40,14 +40,16 @@
                             </MudTh>
                         </HeaderContent>
                         <RowTemplate>
-                            <MudTd><MudIcon Icon="@Common.ApplicationEnvironmentProfileIcon"/></MudTd>
+                            <MudTd>
+                                <MudIcon Icon="@Common.ApplicationEnvironmentProfileIcon"/>
+                            </MudTd>
                             <MudTd DataLabel="Name">@context.Name</MudTd>
                             <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
                             <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
                         </RowTemplate>
                     </MudTable>
                     <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@AddClick" Color="Color.Primary">Add Environment</MudButton>
-                    <MudDivider DividerType="DividerType.Middle" FlexItem />
+                    <MudDivider DividerType="DividerType.Middle" FlexItem/>
                     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
                         @if (!IsNew)
                         {
@@ -89,7 +91,6 @@
         await Save();
         OpenEnvironment((string)result.Data);
     }
-
 
 
 }

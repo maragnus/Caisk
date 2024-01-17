@@ -24,7 +24,7 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
         base.OnParametersSet();
         _cancelled = false;
     }
-    
+
     protected void Cancel()
     {
         _cancelled = true;
@@ -43,15 +43,12 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
         IsNew = profile == null;
         Profile = profile ?? await ProfileStore.Create(Name, ParentName);
     }
-    
+
     protected async Task Save()
     {
-        await SafeActionAsync(async () =>
-        {
-            await ProfileStore.Store(Profile);
-        });
+        await SafeActionAsync(async () => { await ProfileStore.Store(Profile); });
     }
-    
+
     protected async Task SaveAndClose()
     {
         await Save();
@@ -60,12 +57,13 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
 
     protected async Task Delete()
     {
-        var result = await DialogService.ShowMessageBox($"Delete {ProfileStore.Name} Profile", "Are you sure that you would like to delete this profile?", "Yes", "No", "Cancel");
+        var result = await DialogService.ShowMessageBox($"Delete {ProfileStore.Name} Profile",
+            "Are you sure that you would like to delete this profile?", "Yes", "No", "Cancel");
         if (result != true) return;
         await ProfileStore.Delete(Profile.Name, Profile.ParentName);
         Cancel();
     }
-    
+
     protected async Task Rename()
     {
         var parameters = new DialogParameters
@@ -80,13 +78,14 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
         await ProfileStore.Rename(Profile.Name, (string)result.Data, Profile.ParentName);
         Cancel();
     }
-    
+
     protected async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
         if (_cancelled || !IsTouched) return;
-        
-        var result = await DialogService.ShowMessageBox($"Changed {ProfileStore.Name} Profile", "Would you like to save before leaving?", "Yes, Save Changes", "No, Abandon Changes", "Cancel");
-        
+
+        var result = await DialogService.ShowMessageBox($"Changed {ProfileStore.Name} Profile",
+            "Would you like to save before leaving?", "Yes, Save Changes", "No, Abandon Changes", "Cancel");
+
         if (result == true) await Save();
         else if (result == null) context.PreventNavigation();
     }

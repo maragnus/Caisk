@@ -1,7 +1,6 @@
 ﻿@page "/github/{Name}"
-@using Caisk.GitHub
 @using Caisk.Deploy
-@inherits BaseProfileEditor<GitHubRepositoryProfile, IGitHubRepositoryStore>
+@inherits BaseProfileEditor<Caisk.GitHub.GitHubRepositoryProfile, Caisk.GitHub.IGitHubRepositoryStore>
 
 @rendermode InteractiveServer
 
@@ -30,11 +29,13 @@
                         <MudChipSet>
                             @foreach (var workflow in Profile.Workflows)
                             {
-                                <MudChip Disabled Icon="@Icons.Material.Filled.Settings"><span title="@workflow.Id">@workflow.Name</span></MudChip>
+                                <MudChip Disabled Icon="@Icons.Material.Filled.Settings">
+                                    <span title="@workflow.Id">@workflow.Name</span>
+                                </MudChip>
                             }
                         </MudChipSet>
                     </MudField>
-                    
+
                     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
                         @if (!IsNew)
                         {

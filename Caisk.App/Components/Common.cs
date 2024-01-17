@@ -28,7 +28,7 @@ public static class Common
     public const string GitHubRepositoryProfileIcon = Icons.Custom.Brands.GitHub;
     public const string RegistryProfileIcon = Icons.Material.Filled.DirectionsBoat;
 
-    private static Dictionary<Type, string> _iconMap = new()
+    private static readonly Dictionary<Type, string> IconMap = new()
     {
         { typeof(SecureShellProfile), SecureShellProfileIcon },
         { typeof(MongoDatabaseProfile), MongoDatabaseProfileIcon },
@@ -39,7 +39,7 @@ public static class Common
         { typeof(RegistryProfile), RegistryProfileIcon }
     };
 
-    private static Dictionary<Type, string> _profileMap = new()
+    private static readonly Dictionary<Type, string> ProfileMap = new()
     {
         { typeof(SecureShellProfile), SecureShellProfileUrl },
         { typeof(MongoDatabaseProfile), MongoDatabaseProfileUrl },
@@ -52,14 +52,14 @@ public static class Common
 
     public static string ProfileIcon<TProfile>()
         where TProfile : ObjectProfile, new() =>
-        _iconMap.GetValueOrDefault(typeof(TProfile), Icons.Material.Filled.QuestionMark);
+        IconMap.GetValueOrDefault(typeof(TProfile), Icons.Material.Filled.QuestionMark);
 
     public static string ProfilesUrl<TProfile>(string? parentName = default)
         where TProfile : ObjectProfile, new() =>
         parentName == null
-            ? _profileMap.GetValueOrDefault(typeof(TProfile)) ??
+            ? ProfileMap.GetValueOrDefault(typeof(TProfile)) ??
               throw new Exception($"{typeof(TProfile)} not registered in Common.ProfileMap")
-            : ProfilesUrl<TProfile>(default).Replace("{parent}", parentName);
+            : ProfilesUrl<TProfile>().Replace("{parent}", parentName);
 
     public static string ProfileUrl<TProfile>(string name, string? parentName = default)
         where TProfile : ObjectProfile, new() => $"{ProfilesUrl<TProfile>(parentName)}/{name}";

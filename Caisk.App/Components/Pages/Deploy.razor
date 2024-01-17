@@ -1,7 +1,7 @@
 ﻿@page "/apps/{ParentName}/{Name}/deploy"
-@using Caisk.Applications
 @using Caisk.Deploy
-@inherits BaseProfileEditor<ApplicationEnvironmentProfile, IApplicationEnvironmentStore>
+@using Caisk.Applications
+@inherits BaseProfileEditor<Caisk.Applications.ApplicationEnvironmentProfile, Caisk.Applications.IApplicationEnvironmentStore>
 
 @rendermode InteractiveServer
 
@@ -23,13 +23,12 @@
             <MudStack Spacing="4">
                 <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
                 <MudTextField Label="Application" ReadOnly Value="Profile.ParentName"/>
-               
-                
+
                 <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
                     <MudButton OnClick="@DeployApp" Color="Color.Info" StartIcon="@Icons.Material.Filled.RocketLaunch">Deploy</MudButton>
                     <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
-                    <MudButton StartIcon="@Common.ApplicationEnvironmentProfileIcon"  OnClick="@GoToEnvironment" Color="Color.Default">Environment</MudButton>
-                    <MudButton StartIcon="@Common.ApplicationProfileIcon"  OnClick="@GoToApplication" Color="Color.Default">Application</MudButton>
+                    <MudButton StartIcon="@Common.ApplicationEnvironmentProfileIcon" OnClick="@GoToEnvironment" Color="Color.Default">Environment</MudButton>
+                    <MudButton StartIcon="@Common.ApplicationProfileIcon" OnClick="@GoToApplication" Color="Color.Default">Application</MudButton>
                 </MudStack>
             </MudStack>
         }
@@ -41,7 +40,7 @@
 
     private void GoToEnvironment() =>
         NavigationManager.NavigateToProfile<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName);
-    
+
     private void GoToApplication() =>
         NavigationManager.NavigateToProfile<ApplicationProfile>(Profile.ParentName!);
 
@@ -53,4 +52,5 @@
             await DialogService.ShowMessageBox($"Deploy {Profile.ParentName} {Profile.Name}", "Deployment complete");
         });
     }
+
 }

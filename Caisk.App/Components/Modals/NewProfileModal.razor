@@ -1,5 +1,4 @@
 ﻿@using Caisk.Objects
-
 <form @onsubmit="@FormSubmit">
     <MudDialog DefaultFocus="DefaultFocus.FirstChild">
         <DialogContent>
@@ -20,7 +19,7 @@
     [Parameter] public string[] Names { get; set; } = default!;
     [Parameter] public string? OkButton { get; set; } = "Create";
     [Parameter] public string? Name { get; set; }
-    
+
     private bool _isValid;
 
     private void Confirm()

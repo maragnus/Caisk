@@ -1,7 +1,6 @@
 ﻿@page "/mongo/{Name}"
-@using Caisk.Managers.Mongo
 @using Caisk.SecureShells
-@inherits BaseProfileEditor<MongoDatabaseProfile, IMongoDatabaseStore>
+@inherits BaseProfileEditor<Caisk.Managers.Mongo.MongoDatabaseProfile, Caisk.Managers.Mongo.IMongoDatabaseStore>
 
 @rendermode InteractiveServer
 

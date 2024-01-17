@@ -19,9 +19,15 @@
     {
         <MudTable T="ApplicationProfile" Items="_profiles" SortLabel="Sort By" Hover OnRowClick="@OpenProfile" Breakpoint="Breakpoint.Sm">
             <HeaderContent>
-                <MudTh><MudTableSortLabel SortBy="new Func<ApplicationProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<ApplicationProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<ApplicationProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<ApplicationProfile, object>(x => x.Name)">Name</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<ApplicationProfile, object>(x => x.Created)">Added</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<ApplicationProfile, object>(x => x.Updated)">Updated</MudTableSortLabel>
+                </MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Name">@context.Name</MudTd>
@@ -29,7 +35,7 @@
                 <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
             </RowTemplate>
             <PagerContent>
-                <MudTablePager PageSizeOptions="new[]{50, 100}"/>
+                <MudTablePager PageSizeOptions="new[] { 50, 100 }"/>
             </PagerContent>
         </MudTable>
         <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@AddClick" Color="Color.Primary">Add Application</MudButton>
@@ -54,6 +60,7 @@
         NavigationManager.NavigateToProfile<ApplicationProfile>((string)result.Data);
     }
 
-    private void OpenProfile(TableRowClickEventArgs<ApplicationProfile> row) => 
+    private void OpenProfile(TableRowClickEventArgs<ApplicationProfile> row) =>
         NavigationManager.NavigateToProfile<ApplicationProfile>(row.Item.Name);
+
 }
