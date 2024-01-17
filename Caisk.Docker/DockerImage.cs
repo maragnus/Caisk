@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Caisk.Common;
+namespace Caisk.Docker;
 
 public readonly struct DockerImage(string? registry, string? imageName, string? tag)
 {

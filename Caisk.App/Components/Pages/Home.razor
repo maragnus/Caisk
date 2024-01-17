@@ -14,39 +14,39 @@
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     @foreach (var (app, envs) in _apps)
     {
-        <MudText Typo="Typo.h4" Class="mb-4">@app.Name</MudText>
-        <MudGrid Spacing="4">
+        <MudButton Size="Size.Large" StartIcon="@Common.ApplicationProfileIcon" Href="@(Common.ProfileUrl<ApplicationProfile>(app.Name))">@app.Name</MudButton>
+        <MudGrid Spacing="4" Class="mt-2">
             @foreach (var env in envs)
             {
                 <MudItem xs="12" sm="6" md="4" lg="3" xl="2">
                     <MudCard>
-                        <MudCardHeader>
-                            <MudText Typo="Typo.h5">@env.ParentName @env.Name</MudText>
-                        </MudCardHeader>
                         <MudCardContent>
-                            <MudStack Spacing="1">
-                                @foreach (var url in env.EntryUrl?.Split(";") ?? Array.Empty<string>())
-                                {
-                                    <MudLink Href="@url">
-                                        <MudIcon Icon="@Icons.Material.Filled.Link" Style="font-size: inherit"/> @url
-                                    </MudLink>
-                                }
+                            <MudStack Spacing="4" AlignItems="AlignItems.Stretch">
+                                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                    <MudButton Size="Size.Medium" StartIcon="@Common.ApplicationEnvironmentProfileIcon" Href="@(Common.ProfileUrl<ApplicationEnvironmentProfile>(env.Name, env.ParentName))">@env.ParentName @env.Name</MudButton>
+                                    <MudIconButton Color="Color.Tertiary" Icon="@Icons.Material.Filled.RocketLaunch" OnClick="@(() => Deploy(env))">Deploy</MudIconButton>
+                                </MudStack>
+                                <MudDivider DividerType="DividerType.Middle" FlexItem/>
+                                <MudStack AlignItems="AlignItems.Start">
+                                    @foreach (var url in env.EntryUrl?.Split(";") ?? Array.Empty<string>())
+                                    {
+                                        <MudLink Href="@url">
+                                            <MudIcon Icon="@Icons.Material.Filled.Link" Style="font-size: inherit"/> @url
+                                        </MudLink>
+                                    }
+                                </MudStack>
                                 <MudChipSet>
                                     @foreach (var image in env.Services)
                                     {
                                         <MudChip Icon="@Icons.Material.Filled.LocalShipping">@image.Image</MudChip>
                                     }
+                                    <ProfileChip T="RegistryProfile" Name="@app.RegistryName"/>
+                                    <ProfileChip T="GitHubRepositoryProfile" Name="@app.GitHubRepositoryName"/>
+                                    <ProfileChip T="MongoDatabaseProfile" Name="@env.MongoDatabaseName"/>
+                                    <ProfileChip T="SecureShellProfile" Name="@env.SecureShellName"/>
                                 </MudChipSet>
-                                <ProfileButton T="RegistryProfile" Name="@app.RegistryName"/>
-                                <ProfileButton T="GitHubRepositoryProfile" Name="@app.GitHubRepositoryName"/>
-                                <ProfileButton T="MongoDatabaseProfile" Name="@env.MongoDatabaseName"/>
-                                <ProfileButton T="SecureShellProfile" Name="@env.SecureShellName"/>
                             </MudStack>
                         </MudCardContent>
-                        <MudCardActions>
-                            <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => GoToApp(env))">Edit</MudButton>
-                            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.RocketLaunch" OnClick="@(() => Deploy(env))">Deploy</MudButton>
-                        </MudCardActions>
                     </MudCard>
                 </MudItem>
             }
@@ -66,17 +66,10 @@
         _apps = await ApplicationStore.GetAllEnvironments();
     }
 
-
-    void Deploy(ApplicationEnvironmentProfile env)
-    {
+    void Deploy(ApplicationEnvironmentProfile env) =>
         NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(env.Name, env.ParentName) + "/deploy");
-    }
-
 
     void GoToApp(ApplicationEnvironmentProfile env) =>
         NavigationManager.NavigateToProfile<ApplicationEnvironmentProfile>(env.Name, env.ParentName);
 
-    void GoToGitHub(string? name) => NavigationManager.NavigateToProfile<GitHubRepositoryProfile>(name);
-    void GoToMongo(string? name) => NavigationManager.NavigateToProfile<MongoDatabaseProfile>(name);
-    void GoToSecureShell(string? name) => NavigationManager.NavigateToProfile<SecureShellProfile>(name);
 }

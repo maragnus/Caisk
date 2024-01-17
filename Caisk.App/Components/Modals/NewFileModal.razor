@@ -3,6 +3,7 @@
     <MudDialog DefaultFocus="DefaultFocus.FirstChild">
         <DialogContent>
             <MudTextField T="string" @bind-Text="@Name" Label="@Label" Validation="@((object)ValidateName)" Immediate Variant="Variant.Outlined"/>
+            <MudCheckBox T="bool" @bind-Checked="@IsBase64" Label="Base64 Encoded"/>
             <MudAlert Severity="Severity.Info" Class="my-4">@ObjectProfileUtility.NameConstraint</MudAlert>
             <MudDivider/>
         </DialogContent>
@@ -19,14 +20,15 @@
     [Parameter] public string[] Names { get; set; } = default!;
     [Parameter] public string? OkButton { get; set; } = "Create";
     [Parameter] public string? Name { get; set; }
-    [Parameter] public string? Label { get; set; } = "Profile Name";
+    [Parameter] public string? Label { get; set; } = "File Name";
+    [Parameter] public bool IsBase64 { get; set; }
 
     private bool _isValid;
 
     private void Confirm()
     {
         if (ValidateName(Name) is null)
-            MudDialog.Close(DialogResult.Ok(Name));
+            MudDialog.Close(DialogResult.Ok(new Tuple<string, bool>(Name!, IsBase64)));
     }
 
     private void Cancel() => MudDialog.Close(DialogResult.Cancel());
@@ -36,9 +38,6 @@
         _isValid = false;
         if (string.IsNullOrWhiteSpace(name))
             return "Name is required";
-
-        if (!ObjectProfileUtility.IsNameValid(name))
-            return "Name format is incorrect";
 
         if (Names.Contains(name))
             return "Name already exists";

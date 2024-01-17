@@ -1,6 +1,6 @@
 ﻿@typeparam T where T : Caisk.Objects.ObjectProfile, new()
 
-<MudButton StartIcon="@(Common.ProfileIcon<T>())" Href="@(Common.ProfileUrl<T>(Name, ParentName))">
+<MudChip Icon="@(Common.ProfileIcon<T>())" Href="@(Common.ProfileUrl<T>(Name, ParentName))" Color="Color">
     @if (string.IsNullOrWhiteSpace(ParentName))
     {
         @Name
@@ -9,10 +9,11 @@
     {
         @($"{ParentName} / {Name}")
     }
-</MudButton>
+</MudChip>
 
 @code {
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
     [Parameter] public string Name { get; set; } = default!;
     [Parameter] public string? ParentName { get; set; }
+    [Parameter] public Color Color { get; set; } = Color.Default;
 }

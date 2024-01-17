@@ -28,6 +28,8 @@ public static class Common
     public const string GitHubRepositoryProfileIcon = Icons.Custom.Brands.GitHub;
     public const string RegistryProfileIcon = Icons.Material.Filled.DirectionsBoat;
 
+    public const string DockerComposeYaml = "docker-compose.yaml";
+
     private static readonly Dictionary<Type, string> IconMap = new()
     {
         { typeof(SecureShellProfile), SecureShellProfileIcon },

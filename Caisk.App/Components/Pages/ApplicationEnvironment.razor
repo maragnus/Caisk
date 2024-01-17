@@ -1,8 +1,8 @@
 ﻿@page "/apps/{ParentName}/{Name}"
-@using Caisk.Applications
 @using Caisk.GitHub
 @using Caisk.Managers.Mongo
 @using Caisk.SecureShells
+@using Caisk.Applications
 @inherits BaseProfileEditor<Caisk.Applications.ApplicationEnvironmentProfile, Caisk.Applications.IApplicationEnvironmentStore>
 
 @rendermode InteractiveServer
@@ -26,12 +26,12 @@
                 <MudStack Spacing="4">
                     <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
                     <MudTextField Label="Application" ReadOnly Value="Profile.ParentName"/>
-                    <MudTextField Label="Entry Urls (semi-colon delimited)" Value="Profile.EntryUrl"/>
-                    <MudTextField Label="Health Check Url" Value="Profile.HealthCheckUrl"/>
+                    <MudTextField Label="Entry Urls (semi-colon delimited)" @bind-Value="Profile.EntryUrl"/>
+                    <MudTextField Label="Health Check Url" @bind-Value="Profile.HealthCheckUrl"/>
                     <ProfileSelector T="MongoDatabaseProfile" @bind-Value="Profile.MongoDatabaseName"/>
                     <ProfileSelector T="SecureShellProfile" @bind-Value="Profile.SecureShellName"/>
                     <MudGrid>
-                        @foreach (var service in Profile.Services)
+                        @foreach (var service in Profile.Services ?? [])
                         {
                             <MudItem sm="6" md="3">
                                 <MudTextField T="string" Value="@service.Name" ReadOnly Label="Service"/>
@@ -40,16 +40,43 @@
                                 <ProfileSelector T="GitHubRepositoryProfile" @bind-Value="@service.RepositoryName" Label="Repository"/>
                             </MudItem>
                             <MudItem sm="6" md="3">
-                                <MudTextField T="string" @bind-Value="@service.ActionId" Label="Workflow ID"/>
+                                <MudSelect T="string" @bind-Value="@service.ActionId" Label="Workflow ID">
+                                    <MudSelectItem T="string" Value="@null">None</MudSelectItem>
+                                    @foreach (var workflow in GetWorkflows(service.RepositoryName))
+                                    {
+                                        <MudSelectItem Value="@workflow.Id">@workflow.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
                             </MudItem>
                             <MudItem sm="6" md="3">
                                 <MudTextField T="string" Value="@service.Image.ToString()" ReadOnly Label="Image"/>
                             </MudItem>
                         }
                     </MudGrid>
+                    <MudInputLabel Variant="Variant.Text">Deployed Files</MudInputLabel>
+                    <MudTable T="DeployedFile" Items="_deployedFiles" Elevation="0" Dense Hover OnRowClick="@OpenDeployedFile" Style="overflow-y: hidden">
+                        <HeaderContent>
+                            <MudTh></MudTh>
+                            <MudTh>File Name</MudTh>
+                            <MudTh>Base64</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <MudIcon Icon="@Icons.Material.Filled.AttachFile" Style="font-size: inherit"/>
+                            </MudTd>
+                            <MudTd>
+                                @context.FileName
+                            </MudTd>
+                            <MudTd>
+                                <MudCheckBox T="bool" @bind-Checked="@context.Base64"/>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                    <div>
+                        <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@AddDeployedFile" Color="Color.Primary">Add Deployed File</MudButton>
+                    </div>
                     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
-                        <MudButton StartIcon="@Icons.Material.Filled.Launch" OnClick="@Deploy" Color="Color.Error">Deploy</MudButton>
-                        <MudButton OnClick="@EditDockerCompose" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit">Docker Compose</MudButton>
+                        <MudButton StartIcon="@Icons.Material.Filled.RocketLaunch" OnClick="@Deploy" Color="Color.Tertiary">Deploy</MudButton>
                         <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
                         @if (!IsNew)
                         {
@@ -67,11 +94,25 @@
 </MudContainer>
 
 @code {
+    [Inject] IGitHubRepositoryStore GitHubRepositoryStore { get; init; } = default!;
 
-    private async Task EditDockerCompose()
+    readonly Dictionary<string, GitHubWorkflow[]> _workflows = new();
+    List<DeployedFile> _deployedFiles = [];
+
+    protected override async Task OnSafeInitializedAsync()
     {
-        await Save();
-        NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + "/docker-compose");
+        await base.OnSafeInitializedAsync();
+        var repos = await GitHubRepositoryStore.GetAll();
+        foreach (var repo in repos)
+            _workflows.Add(repo.Name, repo.Workflows.ToArray());
+    }
+
+    protected override async Task OnSafeParametersSetAsync()
+    {
+        await base.OnSafeParametersSetAsync();
+        _deployedFiles.Clear();
+        _deployedFiles.Add(new DeployedFile() { FileName = Common.DockerComposeYaml });
+        _deployedFiles.AddRange(Profile.Files);
     }
 
     private async Task Deploy()
@@ -79,5 +120,41 @@
         await Save();
         NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + "/deploy");
     }
+
+    private IEnumerable<GitHubWorkflow> GetWorkflows(string? gitHubProfileName)
+    {
+        if (!string.IsNullOrWhiteSpace(gitHubProfileName)
+            && _workflows.TryGetValue(gitHubProfileName, out var result))
+            return result;
+        return [];
+    }
+
+    private async Task AddDeployedFile()
+    {
+        var names = _deployedFiles.Select(p => p.FileName).ToArray();
+        var parameters = new DialogParameters { { nameof(NewFileModal.Names), names } };
+        var modal = await DialogService.ShowAsync<NewFileModal>("Add Deployed File", parameters);
+        var result = await modal.Result;
+        if (result.Canceled) return;
+        var response = (Tuple<string, bool>)result.Data;
+        Profile.Files.Add(new DeployedFile() { FileName = response.Item1, Base64 = response.Item2 });
+        await OpenDeployedFile(response.Item1);
+    }
+
+    private async Task OpenDeployedFile(string fileName)
+    {
+        await Save();
+        if (fileName == Common.DockerComposeYaml)
+        {
+            NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + "/docker-compose");
+        }
+        else
+        {
+            NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + $"/files/{fileName}");
+        }
+    }
+
+    private Task OpenDeployedFile(TableRowClickEventArgs<DeployedFile> arg) =>
+        OpenDeployedFile(arg.Item.FileName);
 
 }

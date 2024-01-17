@@ -26,11 +26,11 @@
                     <MudTextField Label="Repository Name" Immediate InputType="InputType.Text" @bind-Value="Profile.RepositoryName"/>
                     <MudTextField Label="Token" Immediate InputType="InputType.Password" @bind-Value="Profile.Token"/>
                     <MudField Label="Workflows" Adornment="Adornment.End" OnAdornmentClick="Refresh" AdornmentIcon="@Icons.Material.Filled.Refresh" AdornmentColor="Color.Primary">
-                        <MudChipSet>
+                        <MudChipSet ReadOnly>
                             @foreach (var workflow in Profile.Workflows)
                             {
-                                <MudChip Disabled Icon="@Icons.Material.Filled.Settings">
-                                    <span title="@workflow.Id">@workflow.Name</span>
+                                <MudChip Icon="@Icons.Material.Filled.Settings">
+                                    <MudTooltip Text="@workflow.Id">@workflow.Name</MudTooltip>
                                 </MudChip>
                             }
                         </MudChipSet>
