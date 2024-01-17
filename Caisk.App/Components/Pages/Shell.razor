@@ -32,7 +32,7 @@
                     <MudItem sm="12" md="6">
                         <MudTextField Label="User Password" Immediate InputType="InputType.Password" @bind-Value="Profile.Password"/>
                         <MudTextField Label="Root Password" Immediate InputType="InputType.Password" @bind-Value="Profile.RootPassword"/>
-                        <ProfileSelector T="PrivateKeyProfile" Label="Private Key" @bind-Value="Profile.KeyPairName" Icon="@Icons.Material.Filled.Key" />
+                        <ProfileSelector T="PrivateKeyProfile" @bind-Value="Profile.KeyPairName"/>
                     </MudItem>
                 </MudGrid>
                 <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">

@@ -29,6 +29,8 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
+        Label ??= Store.Name;
+        Icon ??= Common.ProfileIcon<T>();
         Items = await Store.GetNames(ParentName);
     }
 

@@ -5,6 +5,7 @@ using Caisk.Managers.Mongo;
 using Caisk.Objects;
 using Caisk.SecureShells;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 
 namespace Caisk.App.Components;
 
@@ -18,6 +19,26 @@ public static class Common
     public const string GitHubRepositoryProfileUrl = "/github";
     public const string RegistryProfileUrl = "/registries";
 
+    public const string DashboardIcon = Icons.Material.Filled.Dashboard;
+    public const string SecureShellProfileIcon = Icons.Material.Filled.Terminal;
+    public const string MongoDatabaseProfileIcon = Icons.Material.Filled.BackupTable;
+    public const string PrivateKeyProfileIcon = Icons.Material.Filled.Key;
+    public const string ApplicationProfileIcon = Icons.Material.Filled.Apps;
+    public const string ApplicationEnvironmentProfileIcon = Icons.Material.Filled.LocalShipping;
+    public const string GitHubRepositoryProfileIcon = Icons.Custom.Brands.GitHub;
+    public const string RegistryProfileIcon = Icons.Material.Filled.DirectionsBoat;
+
+    private static Dictionary<Type, string> _iconMap = new()
+    {
+        { typeof(SecureShellProfile), SecureShellProfileIcon },
+        { typeof(MongoDatabaseProfile), MongoDatabaseProfileIcon },
+        { typeof(PrivateKeyProfile), PrivateKeyProfileIcon },
+        { typeof(ApplicationProfile), ApplicationProfileIcon },
+        { typeof(ApplicationEnvironmentProfile), ApplicationEnvironmentProfileIcon },
+        { typeof(GitHubRepositoryProfile), GitHubRepositoryProfileIcon },
+        { typeof(RegistryProfile), RegistryProfileIcon }
+    };
+
     private static Dictionary<Type, string> _profileMap = new()
     {
         { typeof(SecureShellProfile), SecureShellProfileUrl },
@@ -28,6 +49,10 @@ public static class Common
         { typeof(GitHubRepositoryProfile), GitHubRepositoryProfileUrl },
         { typeof(RegistryProfile), RegistryProfileUrl }
     };
+
+    public static string ProfileIcon<TProfile>()
+        where TProfile : ObjectProfile, new() =>
+        _iconMap.GetValueOrDefault(typeof(TProfile), Icons.Material.Filled.QuestionMark);
 
     public static string ProfilesUrl<TProfile>(string? parentName = default)
         where TProfile : ObjectProfile, new() =>

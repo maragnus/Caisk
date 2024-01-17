@@ -24,10 +24,11 @@
             <MudForm Model="Profile" @bind-IsValid="IsValid" @bind-IsTouched="IsTouched">
                 <MudStack Spacing="4">
                     <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
-                    <ProfileSelector T="RegistryProfile" Label="Container Registry" @bind-Value="Profile.RegistryName" Items="_registries" Icon="@Icons.Material.Filled.DirectionsBoat" OpenClicked="OpenRegistry"/>
-                    <ProfileSelector T="GitHubRepositoryProfile" Label="GitHub Repository" @bind-Value="Profile.GitHubRepositoryName" Items="_repositories" Icon="@Icons.Custom.Brands.GitHub" OpenClicked="OpenGitHub"/>
-                    <MudTable T="ApplicationEnvironmentProfile" Items="_environments" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="e => OpenEnvironment(e.Item.Name)">
+                    <ProfileSelector T="RegistryProfile" @bind-Value="Profile.RegistryName"/>
+                    <ProfileSelector T="GitHubRepositoryProfile" @bind-Value="Profile.GitHubRepositoryName"/>
+                    <MudTable T="ApplicationEnvironmentProfile" Items="_environments" Dense Hover SortLabel="Sort By" Elevation="0" OnRowClick="e => OpenEnvironment(e.Item.Name)">
                         <HeaderContent>
+                            <MudTh></MudTh>
                             <MudTh>
                                 <MudTableSortLabel SortBy="new Func<ApplicationEnvironmentProfile, object>(x => x.Name)">Name</MudTableSortLabel>
                             </MudTh>
@@ -39,15 +40,14 @@
                             </MudTh>
                         </HeaderContent>
                         <RowTemplate>
+                            <MudTd><MudIcon Icon="@Common.ApplicationEnvironmentProfileIcon"/></MudTd>
                             <MudTd DataLabel="Name">@context.Name</MudTd>
                             <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
                             <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
                         </RowTemplate>
-                        <PagerContent>
-                            <MudTablePager PageSizeOptions="new[] { 50, 100 }"/>
-                        </PagerContent>
                     </MudTable>
                     <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@AddClick" Color="Color.Primary">Add Environment</MudButton>
+                    <MudDivider DividerType="DividerType.Middle" FlexItem />
                     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
                         @if (!IsNew)
                         {
@@ -65,19 +65,11 @@
 </MudContainer>
 
 @code {
-    private string[] _registries = Array.Empty<string>(), _repositories = Array.Empty<string>();
     private ApplicationEnvironmentProfile[] _environments = Array.Empty<ApplicationEnvironmentProfile>();
 
     [Inject] public IApplicationEnvironmentStore EnvironmentStore { get; init; } = default!;
     [Inject] public IGitHubRepositoryStore GitHubRepositoryStore { get; init; } = default!;
     [Inject] public IRegistryStore RegistryStore { get; init; } = default!;
-
-    protected override async Task OnSafeInitializedAsync()
-    {
-        await base.OnSafeInitializedAsync();
-        _registries = await RegistryStore.GetNames();
-        _repositories = await GitHubRepositoryStore.GetNames();
-    }
 
     protected override async Task OnSafeParametersSetAsync()
     {
@@ -85,8 +77,6 @@
         _environments = await EnvironmentStore.GetAll(Profile.Name);
     }
 
-    private void OpenGitHub(string profileName) => NavigationManager.NavigateToProfile<GitHubRepositoryProfile>(profileName);
-    private void OpenRegistry(string profileName) => NavigationManager.NavigateToProfile<RegistryProfile>(profileName);
     private void OpenEnvironment(string profileName) => NavigationManager.NavigateToProfile<ApplicationEnvironmentProfile>(profileName, Profile.Name);
 
     private async Task AddClick()
@@ -99,5 +89,7 @@
         await Save();
         OpenEnvironment((string)result.Data);
     }
+
+
 
 }

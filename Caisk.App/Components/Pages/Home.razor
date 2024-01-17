@@ -52,10 +52,9 @@
     }
 
 
-    async Task Deploy(ApplicationEnvironmentProfile env)
+    void Deploy(ApplicationEnvironmentProfile env)
     {
-        await DeploymentManager.DeployApplication(env.ParentName!, env.Name);
-        await DialogService.ShowMessageBox($"Deploy {env.ParentName} {env.Name}", "Deployment complete");
+        NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(env.Name, env.ParentName) + "/deploy");
     }
 
     

@@ -28,7 +28,7 @@
                     <MudTextField Label="User Name" Immediate InputType="InputType.Text" @bind-Value="Profile.UserName"/>
                     <MudTextField Label="User Password" Immediate InputType="InputType.Password" @bind-Value="Profile.Password"/>
                     <MudTextField Label="Database" Required Immediate InputType="InputType.Text" @bind-Value="Profile.Database"/>
-                    <ProfileSelector T="SecureShellProfile" Label="Tunnel" @bind-Value="Profile.SecureShellName" Icon="@Icons.Material.Filled.Terminal" />
+                    <ProfileSelector T="SecureShellProfile" Label="Tunnel" @bind-Value="Profile.SecureShellName"/>
                     @if (!string.IsNullOrWhiteSpace(Profile.SecureShellName))
                     {
                         <MudTextField T="int?" Label="Tunnel Port" Required Immediate InputType="InputType.Number" @bind-Value="Profile.TunnelLocalPort"/>
