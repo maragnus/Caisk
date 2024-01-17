@@ -44,7 +44,7 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
         Profile = profile ?? await ProfileStore.Create(Name, ParentName);
     }
 
-    protected async Task Save()
+    protected virtual async Task Save()
     {
         await SafeActionAsync(async () => { await ProfileStore.Store(Profile); });
     }

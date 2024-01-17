@@ -48,7 +48,14 @@ internal abstract class BaseStore<TProfile>(ILiteCollection<TProfile> collection
     }
 
     public ValueTask<TProfile?> Get(string? name, string? parentName = default) =>
-        ValueTask.FromResult(name == null ? default : Collection.FindOne(p => p.Name == name && p.ParentName == parentName));
+        ValueTask.FromResult(name == null
+            ? default
+            : Collection.FindOne(p => p.Name == name && p.ParentName == parentName) ??
+              throw new ProfileNotFoundException<TProfile>(name, parentName));
+
+    public ValueTask<TProfile> Require(string name, string? parentName = default) =>
+        ValueTask.FromResult(Collection.FindOne(p => p.Name == name && p.ParentName == parentName) ??
+                             throw new ProfileNotFoundException<TProfile>(name, parentName));
 
     public ValueTask<TProfile[]> Get(params string[] name) =>
         ValueTask.FromResult(Collection.Find(p => name.Contains(p.Name)).ToArray());
@@ -56,7 +63,7 @@ internal abstract class BaseStore<TProfile>(ILiteCollection<TProfile> collection
     public ValueTask<TProfile[]> GetAll(string? parentName = default) =>
         ValueTask.FromResult(Collection.Find(p => p.ParentName == parentName).ToArray());
 
-    public ValueTask<string[]> GetNames(string? parentName = default) => 
+    public ValueTask<string[]> GetNames(string? parentName = default) =>
         ValueTask.FromResult(Collection.Find(p => p.ParentName == parentName).Select(p => p.Name).ToArray());
 
     public Task ParentRename(string oldParentName, string newParentName)

@@ -8,6 +8,8 @@ public interface IObjectProfileStore<TProfile> where TProfile : ObjectProfile, n
     Task Rename(string oldName, string newName, string? parentName = default);
     Task Delete(string name, string? parentName = default);
     ValueTask<TProfile?> Get(string? name, string? parentName = default);
+
+    ValueTask<TProfile> Require(string name, string? parentName = default);
     ValueTask<TProfile[]> Get(params string[] name);
     ValueTask<TProfile[]> GetAll(string? parentName = default);
     ValueTask<string[]> GetNames(string? parentName = default);
@@ -19,7 +21,7 @@ public class ProfileStoreException : Exception
     public ProfileStoreException(string message) : base(message)
     {
     }
-    
+
     public ProfileStoreException(string message, Exception innerException) : base(message, innerException)
     {
     }

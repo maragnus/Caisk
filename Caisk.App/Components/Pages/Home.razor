@@ -30,7 +30,7 @@
                                 <MudStack AlignItems="AlignItems.Start">
                                     @foreach (var url in env.EntryUrl?.Split(";") ?? Array.Empty<string>())
                                     {
-                                        <MudLink Href="@url">
+                                        <MudLink Href="@url" Target="_blank">
                                             <MudIcon Icon="@Icons.Material.Filled.Link" Style="font-size: inherit"/> @url
                                         </MudLink>
                                     }

@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using YamlDotNet.RepresentationModel;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace Caisk.Docker.DockerCompose;
@@ -14,12 +15,29 @@ public class DockerCompose
     public static DockerCompose ParseYaml(string yaml)
     {
         if (string.IsNullOrWhiteSpace(yaml)) return new DockerCompose();
-        
+
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder()
             .IgnoreUnmatchedProperties()
             .WithNamingConvention(UnderscoredNamingConvention.Instance)
             .Build();
         return deserializer.Deserialize<DockerCompose>(yaml);
+    }
+
+    public static string UpdateServiceImage(string yaml, string serviceName, DockerImage image)
+    {
+        var input = new StringReader(yaml);
+        var yamlStream = new YamlStream();
+        yamlStream.Load(input);
+
+        foreach (var document in yamlStream.Documents)
+        {
+            var node = (YamlScalarNode)document.RootNode["services"][serviceName]["image"];
+            node.Value = image.ToString();
+        }
+
+        using var writer = new StringWriter();
+        yamlStream.Save(writer);
+        return writer.ToString();
     }
 }
 
@@ -32,7 +50,6 @@ public class Service
 
 public class Network
 {
-    
 }
 
 public class Volume

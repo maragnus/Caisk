@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Caisk.Docker;
@@ -17,6 +18,12 @@ public readonly struct DockerImage(string? registry, string? imageName, string? 
         var parts = Regex.Match(value, @"(([\w.]+)/)?(\w+)(:(\w+))");
         return new DockerImage(parts.Groups[2].Value, parts.Groups[3].Value, parts.Groups[5].Value);
     }
+
+    public DockerImage WithTag(decimal tag) =>
+        new(Registry, ImageName, tag.ToString(NumberFormatInfo.InvariantInfo));
+
+    public DockerImage WithTag(string tag) =>
+        new(Registry, ImageName, tag);
 
     public override string ToString()
     {

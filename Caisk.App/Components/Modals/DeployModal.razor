@@ -1,0 +1,80 @@
+﻿@using Caisk.Deploy
+@using Caisk.Applications
+<MudDialog DefaultFocus="DefaultFocus.FirstChild">
+    <DialogContent>
+        <div style="min-width: 400px; min-height: 250px">
+            @if (_isStarted)
+            {
+                <MudProgressLinear Indeterminate="_indeterminate" Max="_max" Value="_progress" Size="Size.Large"/>
+                <MudText Typo="Typo.subtitle1">@_status</MudText>
+            }
+            else
+            {
+                <MudText>Click Start to begin deployment</MudText>
+            }
+        </div>
+        <MudDivider/>
+    </DialogContent>
+    <DialogActions>
+        @if (!_isStarted)
+        {
+            <MudButton Color="Color.Tertiary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.RocketLaunch" OnClick="@Start">Start</MudButton>
+        }
+        else
+        {
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@Done" Disabled="_isRunning">Done</MudButton>
+        }
+        <MudButton Color="Color.Error" OnClick="@Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; init; } = default!;
+    [Inject] DeploymentManager DeploymentManager { get; init; } = default!;
+    [Inject] IApplicationEnvironmentStore ProfileStore { get; init; } = default!;
+    [Inject] IDialogService DialogService { get; init; } = default!;
+    [Parameter] public string ParentName { get; set; } = default!;
+    [Parameter] public string Name { get; set; } = default!;
+
+    private bool _isRunning, _isStarted;
+    private bool _indeterminate = true;
+    private int _max;
+    private int _progress;
+    private string _status = "Loading deployment profile...";
+    private CancellationTokenSource? _cancelSource;
+
+    private void Done() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void Cancel()
+    {
+        _cancelSource?.Cancel();
+        MudDialog.Close(DialogResult.Cancel());
+    }
+
+    private async Task Start()
+    {
+        _cancelSource = new CancellationTokenSource();
+        _isStarted = true;
+        _isRunning = true;
+        _indeterminate = true;
+        _max = 100;
+        _progress = 0;
+        _status = "Initializing...";
+        StateHasChanged();
+
+        await foreach (var status in DeploymentManager.DeployApplication(ParentName!, Name, _cancelSource.Token))
+        {
+            _status = status.StatusText;
+            _progress = status.Value;
+            _max = status.Max;
+            _indeterminate = status.IsIndeterminate;
+            StateHasChanged();
+            Console.WriteLine(status);
+        }
+
+        _isRunning = false;
+        StateHasChanged();
+        await DialogService.ShowMessageBox($"Deployed {ParentName} {Name}", "Deployment complete");
+    }
+
+}

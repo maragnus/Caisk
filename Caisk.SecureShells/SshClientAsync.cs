@@ -5,11 +5,115 @@ namespace Caisk.SecureShells;
 [PublicAPI]
 public class SshClientAsync : IAsyncDisposable
 {
-    private readonly SshClient _sshClient;
     private readonly BlockingCollection<SshAction> _queue = new(new ConcurrentQueue<SshAction>());
-    private Task? _thread;
+    private readonly SshClient _sshClient;
     private CancellationTokenSource? _cancellationSource;
+    private Task? _thread;
+
+    public SshClientAsync(SshClient sshClient)
+    {
+        _sshClient = sshClient;
+    }
+
+    public SshClientAsync(ConnectionInfo connectionInfo)
+    {
+        _sshClient = new SshClient(connectionInfo);
+        _sshClient.HostKeyReceived += HostKeyReceived;
+    }
+
     public string? FingerPrint { get; private set; }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisconnectAsync();
+    }
+
+    private void HostKeyReceived(object? sender, HostKeyEventArgs e)
+    {
+        FingerPrint = Convert.ToHexString(e.FingerPrint);
+        e.CanTrust = true;
+    }
+
+    private void ThreadProc(SshClient ssh, CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var action = _queue.Take(cancellationToken);
+                action.Process(_sshClient, cancellationToken);
+                if (action is SshDisconnectAction)
+                    break;
+            }
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        finally
+        {
+            ssh.Dispose();
+        }
+    }
+
+    public async Task ConnectAsync(CancellationToken cancellationToken = default)
+    {
+        if (_sshClient.IsConnected)
+            throw new Exception("Connection is already established");
+
+        _cancellationSource = new CancellationTokenSource();
+        _thread = Task.Run(() => ThreadProc(_sshClient, _cancellationSource.Token));
+
+        var action = new SshConnectAction(cancellationToken);
+        _queue.Add(action, cancellationToken);
+        await action.Task;
+    }
+
+    public async Task DisconnectAsync()
+    {
+        var action = new SshDisconnectAction(default);
+        _queue.Add(action);
+        await action.Task;
+
+        if (_thread != null)
+            await _thread;
+        _thread = null;
+
+        _queue.CompleteAdding();
+        // Ask thread to shutdown
+        _cancellationSource?.Cancel();
+    }
+
+    public async Task<CommandResult> SendCommandAsync(string commandText, CancellationToken cancellationToken = default)
+    {
+        var action = new SshCommandAction(commandText, cancellationToken);
+        _queue.Add(action, cancellationToken);
+        await action.Task;
+        return action.Result;
+    }
+
+    public async Task<string> GetStringAsync(string command, CancellationToken cancellationToken = default)
+    {
+        var result = await SendCommandAsync(command, cancellationToken);
+        if (result.ExitCode != 0 || !string.IsNullOrWhiteSpace(result.Error))
+            throw new Exception($"Exit code {result.ExitCode}: {result.Error}");
+        return result.Result;
+    }
+
+    public async Task ExecuteAsync(string command, CancellationToken cancellationToken = default)
+    {
+        var result = await SendCommandAsync(command, cancellationToken);
+        if (result.ExitCode != 0)
+            throw new Exception($"Exit code {result.ExitCode}: {result.Error}");
+    }
+
+    public async Task<CommandResult> SendStreamAsync(Func<ShellStream, CancellationToken, CommandResult> callback,
+        CancellationToken cancellationToken = default)
+    {
+        var action = new SshStreamAction(callback, cancellationToken);
+        _queue.Add(action, cancellationToken);
+        await action.Task;
+        return action.Result;
+    }
 
     private abstract class SshAction
     {
@@ -46,37 +150,39 @@ public class SshClientAsync : IAsyncDisposable
 
     private class SshConnectAction : SshAction
     {
+        public SshConnectAction(CancellationToken cancellationToken) : base(cancellationToken)
+        {
+        }
+
         protected override void Run(SshClient ssh, CancellationToken cancellationToken)
         {
             ssh.Connect();
-        }
-
-        public SshConnectAction(CancellationToken cancellationToken) : base(cancellationToken)
-        {
         }
     }
 
     private class SshDisconnectAction : SshAction
     {
+        public SshDisconnectAction(CancellationToken cancellationToken) : base(cancellationToken)
+        {
+        }
+
         protected override void Run(SshClient ssh, CancellationToken cancellationToken)
         {
             ssh.Disconnect();
-        }
-
-        public SshDisconnectAction(CancellationToken cancellationToken) : base(cancellationToken)
-        {
         }
     }
 
     private class SshStreamAction : SshAction
     {
         private readonly Func<ShellStream, CancellationToken, CommandResult> _action;
-        public CommandResult Result { get; private set; } = null!;
-        
-        public SshStreamAction(Func<ShellStream, CancellationToken, CommandResult> action, CancellationToken cancellationToken) : base(cancellationToken)
+
+        public SshStreamAction(Func<ShellStream, CancellationToken, CommandResult> action,
+            CancellationToken cancellationToken) : base(cancellationToken)
         {
             _action = action;
         }
+
+        public CommandResult Result { get; private set; } = null!;
 
         protected override void Run(SshClient ssh, CancellationToken cancellationToken)
         {
@@ -84,16 +190,17 @@ public class SshClientAsync : IAsyncDisposable
             Result = _action.Invoke(shellStream, cancellationToken);
         }
     }
-    
+
     private class SshCommandAction : SshAction
     {
         private readonly string _action;
-        public CommandResult Result { get; private set; } = null!;
-        
+
         public SshCommandAction(string action, CancellationToken cancellationToken) : base(cancellationToken)
         {
             _action = action;
         }
+
+        public CommandResult Result { get; private set; } = null!;
 
         protected override void Run(SshClient ssh, CancellationToken cancellationToken)
         {
@@ -110,111 +217,12 @@ public class SshClientAsync : IAsyncDisposable
             }
         }
     }
-
-    public SshClientAsync(SshClient sshClient)
-    {
-        _sshClient = sshClient;
-    }
-    
-    public SshClientAsync(ConnectionInfo connectionInfo)
-    {
-        _sshClient = new SshClient(connectionInfo);
-        _sshClient.HostKeyReceived += HostKeyReceived;
-    }
-
-    private void HostKeyReceived(object? sender, HostKeyEventArgs e)
-    {
-        FingerPrint = Convert.ToHexString(e.FingerPrint);
-        e.CanTrust = true;
-    }
-    
-    private void ThreadProc(SshClient ssh, CancellationToken cancellationToken)
-    {
-        try
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                var action = _queue.Take(cancellationToken);
-                action.Process(_sshClient, cancellationToken);
-                if (action is SshDisconnectAction)
-                    break;
-            }
-        }
-        catch (TaskCanceledException) {}
-        finally
-        {
-            ssh.Dispose();
-        }
-    }
-
-    public async Task ConnectAsync(CancellationToken cancellationToken = default)
-    {
-        if (_sshClient.IsConnected)
-            throw new Exception("Connection is already established");
-        
-        _cancellationSource = new CancellationTokenSource();
-        _thread = Task.Run(() => ThreadProc(_sshClient, _cancellationSource.Token));
-
-        var action = new SshConnectAction(cancellationToken);
-        _queue.Add(action, cancellationToken);
-        await action.Task;
-    }
-
-    public async Task DisconnectAsync()
-    {
-        var action = new SshDisconnectAction(default);
-        _queue.Add(action);
-        await action.Task;
-        
-        if (_thread != null)
-            await _thread;
-        _thread = null;
-        
-        _queue.CompleteAdding();
-        // Ask thread to shutdown
-        _cancellationSource?.Cancel();
-    }
-    
-    public async Task<CommandResult> SendCommandAsync(string commandText, CancellationToken cancellationToken = default)
-    {
-        var action = new SshCommandAction(commandText, cancellationToken);
-        _queue.Add(action, cancellationToken);
-        await action.Task;
-        return action.Result;
-    }
-
-    public async Task<string> GetStringAsync(string command, CancellationToken cancellationToken = default)
-    {
-        var result = await SendCommandAsync(command, cancellationToken);
-        if (result.ExitCode != 0 || !string.IsNullOrWhiteSpace(result.Error))
-            throw new Exception($"Exit code {result.ExitCode}: {result.Error}");
-        return result.Result;
-    }
-
-    public async Task ExecuteAsync(string command, CancellationToken cancellationToken = default)
-    {
-        var result = await SendCommandAsync(command, cancellationToken);
-        if (result.ExitCode != 0 || !string.IsNullOrWhiteSpace(result.Error))
-            throw new Exception($"Exit code {result.ExitCode}: {result.Error}");
-    }
-    
-    public async Task<CommandResult> SendStreamAsync(Func<ShellStream, CancellationToken, CommandResult> callback,
-        CancellationToken cancellationToken = default)
-    {
-        var action = new SshStreamAction(callback, cancellationToken);
-        _queue.Add(action, cancellationToken);
-        await action.Task;
-        return action.Result;
-    }
-    
-    public async ValueTask DisposeAsync()
-    {
-        await DisconnectAsync();
-    }
 }
 
 [PublicAPI]
 public record CommandResult(int ExitCode, string Result, string Error)
 {
-    public CommandResult(SshCommand command) : this(command.ExitStatus, command.Result, command.Error) {}
+    public CommandResult(SshCommand command) : this(command.ExitStatus, command.Result, command.Error)
+    {
+    }
 };

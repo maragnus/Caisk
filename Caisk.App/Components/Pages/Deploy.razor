@@ -1,5 +1,7 @@
 ﻿@page "/apps/{ParentName}/{Name}/deploy"
+@using Caisk.GitHub
 @using Caisk.Deploy
+@using Caisk.Docker
 @using Caisk.Applications
 @inherits BaseProfileEditor<Caisk.Applications.ApplicationEnvironmentProfile, Caisk.Applications.IApplicationEnvironmentStore>
 
@@ -24,11 +26,26 @@
                 <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
                 <MudTextField Label="Application" ReadOnly Value="Profile.ParentName"/>
 
+                <MudInputLabel>Services</MudInputLabel>
+                @foreach (var service in _services)
+                {
+                    <MudStack Row AlignItems="AlignItems.Center">
+                        <MudSelect T="DockerImage?" Label="@service.Service.Name" @bind-Value="@service.Service.Image">
+                            @foreach (var run in service.Runs)
+                            {
+                                <MudSelectItem T="DockerImage?" Value="@run.Image">@run.Image (@run.Status.Status)</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudIconButton Size="Size.Medium" Icon="@Icons.Material.Filled.Refresh" OnClick="@Refresh" Color="Color.Primary"/>
+                    </MudStack>
+                }
+
                 <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
+                    <MudButton OnClick="@Save" Color="Color.Info" StartIcon="@Icons.Material.Filled.Save">Save</MudButton>
                     <MudButton OnClick="@DeployApp" Color="Color.Info" StartIcon="@Icons.Material.Filled.RocketLaunch">Deploy</MudButton>
                     <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
-                    <MudButton StartIcon="@Common.ApplicationEnvironmentProfileIcon" OnClick="@GoToEnvironment" Color="Color.Default">Environment</MudButton>
-                    <MudButton StartIcon="@Common.ApplicationProfileIcon" OnClick="@GoToApplication" Color="Color.Default">Application</MudButton>
+                    <MudButton StartIcon="@Common.ApplicationEnvironmentProfileIcon" Href="@(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName))" Color="Color.Default">Environment</MudButton>
+                    <MudButton StartIcon="@Common.ApplicationProfileIcon" Href="@(Common.ProfileUrl<ApplicationProfile>(Profile.ParentName!))" Color="Color.Default">Application</MudButton>
                 </MudStack>
             </MudStack>
         }
@@ -36,21 +53,65 @@
 </MudContainer>
 
 @code {
+    List<ServiceInfo> _services = [];
+    [Inject] IGitHubRepositoryStore RepositoryStore { get; set; } = default!;
     [Inject] DeploymentManager DeploymentManager { get; set; } = default!;
 
-    private void GoToEnvironment() =>
-        NavigationManager.NavigateToProfile<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName);
+    protected override async Task OnSafeParametersSetAsync()
+    {
+        await base.OnSafeParametersSetAsync();
+        await Refresh();
+    }
 
-    private void GoToApplication() =>
-        NavigationManager.NavigateToProfile<ApplicationProfile>(Profile.ParentName!);
+    record ServiceInfo(Service Service, RunInfo[] Runs);
+
+    record RunInfo(DockerImage? Image, GitHubRunStatus Status);
+
+    protected override async Task Save()
+    {
+        await SafeActionAsync(async () =>
+        {
+            var profile = await ProfileStore.Require(Name!, ParentName);
+            foreach (var service in _services)
+            {
+                var dest = profile.Services.FirstOrDefault(s => s.Name == service.Service.Name);
+                if (dest is null) continue;
+                dest.Image = service.Service.Image;
+            }
+
+            DeploymentManager.ApplyServices(profile);
+            await ProfileStore.Store(profile);
+            Profile = profile;
+        });
+    }
 
     async Task DeployApp()
     {
         await SafeActionAsync(async () =>
         {
-            await DeploymentManager.DeployApplication(Profile.ParentName!, Profile.Name);
-            await DialogService.ShowMessageBox($"Deploy {Profile.ParentName} {Profile.Name}", "Deployment complete");
+            var profile = await ProfileStore.Require(Name!, ParentName);
+            profile.Services.Clear();
+            profile.Services.AddRange(Profile.Services);
+            var parameters = new DialogParameters { { nameof(DeployModal.Name), Name }, { nameof(DeployModal.ParentName), ParentName } };
+            await DialogService.ShowAsync<DeployModal>($"Deploying {ParentName} {Name}", parameters);
+            await ProfileStore.Store(profile);
         });
+    }
+
+    private async Task Refresh()
+    {
+        _services.Clear();
+        foreach (var service in Profile.Services
+                     .Where(service => !string.IsNullOrEmpty(service.Name))
+                     .Where(service => !string.IsNullOrEmpty(service.RepositoryName))
+                     .Where(service => !string.IsNullOrEmpty(service.ActionId)))
+        {
+            var repo = await RepositoryStore.Get(service.RepositoryName);
+            if (repo is null) continue;
+            var runs = await DeploymentManager.GetGitHubActionRuns(repo, service.ActionId!);
+            var runInfos = runs.Select(run => new RunInfo(service.Image!.Value.WithTag(run.RunId?.ToString() ?? ""), run));
+            _services.Add(new ServiceInfo(service, runInfos.ToArray()));
+        }
     }
 
 }

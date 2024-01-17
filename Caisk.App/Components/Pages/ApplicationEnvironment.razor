@@ -56,16 +56,15 @@
                     <MudInputLabel Variant="Variant.Text">Deployed Files</MudInputLabel>
                     <MudTable T="DeployedFile" Items="_deployedFiles" Elevation="0" Dense Hover OnRowClick="@OpenDeployedFile" Style="overflow-y: hidden">
                         <HeaderContent>
-                            <MudTh></MudTh>
                             <MudTh>File Name</MudTh>
                             <MudTh>Base64</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd>
-                                <MudIcon Icon="@Icons.Material.Filled.AttachFile" Style="font-size: inherit"/>
-                            </MudTd>
-                            <MudTd>
-                                @context.FileName
+                                <MudStack Row Justify="Justify.FlexStart" AlignItems="AlignItems.Center">
+                                    <MudIcon Icon="@Icons.Material.Filled.AttachFile" Style="font-size: inherit"/>
+                                    @context.FileName
+                                </MudStack>
                             </MudTd>
                             <MudTd>
                                 <MudCheckBox T="bool" @bind-Checked="@context.Base64"/>
@@ -115,6 +114,25 @@
         _deployedFiles.AddRange(Profile.Files);
     }
 
+    protected override async Task Save()
+    {
+        var profile = await ProfileStore.Require(Name!, ParentName);
+        profile.EntryUrl = Profile.EntryUrl;
+        profile.HealthCheckUrl = Profile.HealthCheckUrl;
+        profile.MongoDatabaseName = Profile.MongoDatabaseName;
+        profile.SecureShellName = Profile.SecureShellName;
+        profile.Services.Clear();
+        profile.Services.AddRange(Profile.Services);
+        foreach (var src in Profile.Files)
+        {
+            var dest = profile.Files.FirstOrDefault(file => file.FileName == src.FileName);
+            if (dest != null) dest.Base64 = src.Base64;
+        }
+
+        await ProfileStore.Store(profile);
+        Profile = profile;
+    }
+
     private async Task Deploy()
     {
         await Save();
@@ -137,24 +155,29 @@
         var result = await modal.Result;
         if (result.Canceled) return;
         var response = (Tuple<string, bool>)result.Data;
-        Profile.Files.Add(new DeployedFile() { FileName = response.Item1, Base64 = response.Item2 });
-        await OpenDeployedFile(response.Item1);
+
+        await Save();
+
+        var profile = await ProfileStore.Require(Name!, ParentName);
+        profile.Files.Add(new DeployedFile() { FileName = response.Item1, Base64 = response.Item2 });
+        await ProfileStore.Store(profile);
+        Profile = profile;
+
+        OpenDeployedFile(response.Item1);
     }
 
-    private async Task OpenDeployedFile(string fileName)
+    private void OpenDeployedFile(string fileName)
+    {
+        if (fileName == Common.DockerComposeYaml)
+            NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + "/docker-compose");
+        else
+            NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + $"/files/{fileName}");
+    }
+
+    private async Task OpenDeployedFile(TableRowClickEventArgs<DeployedFile> arg)
     {
         await Save();
-        if (fileName == Common.DockerComposeYaml)
-        {
-            NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + "/docker-compose");
-        }
-        else
-        {
-            NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + $"/files/{fileName}");
-        }
-    }
-
-    private Task OpenDeployedFile(TableRowClickEventArgs<DeployedFile> arg) =>
         OpenDeployedFile(arg.Item.FileName);
+    }
 
 }

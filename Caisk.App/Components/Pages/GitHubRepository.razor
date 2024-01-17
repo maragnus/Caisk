@@ -59,7 +59,7 @@
         await Save();
         await SafeActionAsync(async () =>
         {
-            await DeploymentManager.UpdateGitHubWorkflows(Profile);
+            await DeploymentManager.UpdateGitHubWorkflows(Profile, default);
             await Save();
         });
     }
