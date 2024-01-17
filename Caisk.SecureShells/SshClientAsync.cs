@@ -183,6 +183,21 @@ public class SshClientAsync : IAsyncDisposable
         return action.Result;
     }
 
+    public async Task<string> GetStringAsync(string command, CancellationToken cancellationToken = default)
+    {
+        var result = await SendCommandAsync(command, cancellationToken);
+        if (result.ExitCode != 0 || !string.IsNullOrWhiteSpace(result.Error))
+            throw new Exception($"Exit code {result.ExitCode}: {result.Error}");
+        return result.Result;
+    }
+
+    public async Task ExecuteAsync(string command, CancellationToken cancellationToken = default)
+    {
+        var result = await SendCommandAsync(command, cancellationToken);
+        if (result.ExitCode != 0 || !string.IsNullOrWhiteSpace(result.Error))
+            throw new Exception($"Exit code {result.ExitCode}: {result.Error}");
+    }
+    
     public async Task<CommandResult> SendStreamAsync(Func<ShellStream, CancellationToken, CommandResult> callback,
         CancellationToken cancellationToken = default)
     {

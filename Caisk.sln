@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Caisk.Docker", "Caisk.Docke
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Caisk.GitHub", "Caisk.GitHub\Caisk.GitHub.csproj", "{E9D91F3D-72F7-435A-9A88-6D33B2BFF04D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Caisk.Deploy", "Caisk.Deploy\Caisk.Deploy.csproj", "{6752FDA8-7EBC-45BA-A999-3978EEE501C1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,5 +74,9 @@ Global
 		{E9D91F3D-72F7-435A-9A88-6D33B2BFF04D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9D91F3D-72F7-435A-9A88-6D33B2BFF04D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E9D91F3D-72F7-435A-9A88-6D33B2BFF04D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6752FDA8-7EBC-45BA-A999-3978EEE501C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6752FDA8-7EBC-45BA-A999-3978EEE501C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6752FDA8-7EBC-45BA-A999-3978EEE501C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6752FDA8-7EBC-45BA-A999-3978EEE501C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

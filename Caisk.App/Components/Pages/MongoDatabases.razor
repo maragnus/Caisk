@@ -16,7 +16,7 @@
 }
 else
 {
-    <MudTable T="MongoDatabaseProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
+    <MudTable T="MongoDatabaseProfile" Items="_profiles" SortLabel="Sort By" Hover OnRowClick="@OpenProfile" Breakpoint="Breakpoint.Sm">
         <HeaderContent>
             <MudTh><MudTableSortLabel SortBy="new Func<MongoDatabaseProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<MongoDatabaseProfile, object>(x=>x.HostName!)">Host Name</MudTableSortLabel></MudTh>

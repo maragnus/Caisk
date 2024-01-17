@@ -7,5 +7,5 @@ internal class ApplicationEnvironmentStore(ILiteCollection<ApplicationEnvironmen
 {
     public override string Name => "Application Environment";
     public Task<ApplicationEnvironmentProfile[]> GetByApplication(string applicationName) =>
-        Task.FromResult(Collection.Find(profile => profile.ApplicationName == applicationName).ToArray());
+        Task.FromResult(Collection.Find(profile => profile.ParentName == applicationName).ToArray());
 }

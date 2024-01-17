@@ -18,3 +18,8 @@
     --bs-nav-link-color: var(--mud-palette-primary) !important;
     --bs-nav-link-hover-color: var(--mud-palette-primary-darken) !important;
 }
+
+.monaco-editor-container {
+    height: 500px;
+    border: 1px solid gray;
+}

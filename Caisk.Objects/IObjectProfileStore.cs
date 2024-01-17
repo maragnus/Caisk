@@ -7,7 +7,7 @@ public interface IObjectProfileStore<TProfile> where TProfile : ObjectProfile, n
     Task Store(TProfile profile);
     Task Rename(string oldName, string newName, string? parentName = default);
     Task Delete(string name, string? parentName = default);
-    ValueTask<TProfile?> Get(string name, string? parentName = default);
+    ValueTask<TProfile?> Get(string? name, string? parentName = default);
     ValueTask<TProfile[]> Get(params string[] name);
     ValueTask<TProfile[]> GetAll(string? parentName = default);
     ValueTask<string[]> GetNames(string? parentName = default);

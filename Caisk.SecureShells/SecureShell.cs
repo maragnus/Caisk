@@ -3,6 +3,8 @@ namespace Caisk.SecureShells;
 [PublicAPI]
 public class SecureShell(SecureShellProfile profile, SecureShellManager secureShellManager)
 {
+    public SecureShellProfile Profile => profile;
+
     public async Task<SshClientAsync> ConnectAsync()
     {
         var methods = new List<AuthenticationMethod>();

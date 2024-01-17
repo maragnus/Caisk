@@ -1,6 +1,4 @@
 ﻿@page "/shells"
-@using Caisk.Docker
-@using Caisk.App.Components.Modals
 @using Caisk.SecureShells
 @inherits BasePage
 @rendermode InteractiveServer
@@ -18,13 +16,12 @@
 }
 else
 {
-    <MudTable T="SecureShellProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
+    <MudTable T="SecureShellProfile" Items="_profiles" SortLabel="Sort By" Hover OnRowClick="@OpenProfile" Breakpoint="Breakpoint.Sm">
         <HeaderContent>
             <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.HostName!)">Host Name</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.UserName!)">User Name</MudTableSortLabel></MudTh>
-            <MudTh>Key Pairs</MudTh> 
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.MachineInfo!)">Machine Info</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.KeyPairName!)">Private Key</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
         </HeaderContent>
@@ -32,9 +29,8 @@ else
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Host Name">@context.HostName</MudTd>
             <MudTd DataLabel="User Name">@context.UserName</MudTd>
-            <MudTd DataLabel="Key Pair">@context.KeyPairName</MudTd>
-            <MudTd DataLabel="Machine Info">@context.MachineInfo</MudTd>
-            <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
+            <MudTd DataLabel="Key Pair" HideSmall>@context.KeyPairName</MudTd>
+            <MudTd DataLabel="Added" HideSmall>@Common.Date(context.Created)</MudTd>
             <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
         </RowTemplate>
         <PagerContent>

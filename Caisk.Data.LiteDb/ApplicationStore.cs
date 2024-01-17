@@ -13,4 +13,13 @@ internal class ApplicationStore(ILiteCollection<ApplicationProfile> collection, 
         await base.Rename(oldName, newName, parentName);
         await environmentStore.ParentRename(oldName, newName);
     }
+
+    public async Task<ApplicationEnvironments[]> GetAllEnvironments()
+    {
+        var apps = await GetAll();
+        var result = new List<ApplicationEnvironments>();
+        foreach (var app in apps)
+            result.Add(new ApplicationEnvironments(app, await environmentStore.GetAll(app.Name)));
+        return result.ToArray();
+    }
 }

@@ -47,8 +47,8 @@ internal abstract class BaseStore<TProfile>(ILiteCollection<TProfile> collection
         Collection.Delete(profile.Id);
     }
 
-    public ValueTask<TProfile?> Get(string name, string? parentName = default) =>
-        ValueTask.FromResult(Collection.FindOne(p => p.Name == name && p.ParentName == parentName))!;
+    public ValueTask<TProfile?> Get(string? name, string? parentName = default) =>
+        ValueTask.FromResult(name == null ? default : Collection.FindOne(p => p.Name == name && p.ParentName == parentName));
 
     public ValueTask<TProfile[]> Get(params string[] name) =>
         ValueTask.FromResult(Collection.Find(p => name.Contains(p.Name)).ToArray());

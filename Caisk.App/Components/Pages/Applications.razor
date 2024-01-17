@@ -1,7 +1,5 @@
 ﻿@page "/apps"
-@using Caisk.App.Components.Modals
 @using Caisk.Applications
-@using Caisk.SecureShells
 @inherits BasePage
 @rendermode InteractiveServer
 
@@ -18,7 +16,7 @@
 }
 else
 {
-    <MudTable T="ApplicationProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
+    <MudTable T="ApplicationProfile" Items="_profiles" SortLabel="Sort By" Hover OnRowClick="@OpenProfile" Breakpoint="Breakpoint.Sm">
         <HeaderContent>
             <MudTh><MudTableSortLabel SortBy="new Func<ApplicationProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<ApplicationProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>

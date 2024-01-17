@@ -1,5 +1,6 @@
 using Caisk.App.Components;
 using Caisk.Data.LiteDb;
+using Caisk.Deploy;
 using Caisk.SecureShells;
 using MudBlazor.Services;
 
@@ -10,7 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
         .AddInteractiveServerComponents();
     services.AddMudServices();
     services.AddDataContext(GetDataPath());
-
+    
+    services.AddSingleton<DeploymentManager>();
     services.AddSingleton<SecureShellManager>();
 }
 

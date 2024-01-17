@@ -1,4 +1,69 @@
 ﻿@page "/"
+@inherits BasePage
+@using Caisk.Applications
+@using Caisk.Deploy
+@using Caisk.GitHub
+@using Caisk.Managers.Mongo
+@using Caisk.SecureShells
+
+@rendermode InteractiveServer
 
 <PageTitle>Dashboard</PageTitle>
+
+@foreach (var (app, envs) in _apps)
+{
+    <MudText Typo="Typo.h4" Class="mb-4">@app.Name</MudText>
+    <MudGrid Spacing="4">
+        @foreach (var env in envs)
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3" xl="2">
+                <MudCard>
+                    <MudCardHeader>
+                        <MudText Typo="Typo.h5">@env.ParentName @env.Name</MudText>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudStack Spacing="1">
+                            <div><MudIcon Icon="@Icons.Material.Filled.Link" Style="font-size: inherit"/> <MudLink Href="@env.EntryUrl">@env.EntryUrl</MudLink></div>
+                            <div><MudIconButton Icon="@Icons.Custom.Brands.GitHub" OnClick="@(() => GoToGitHub(app.GitHubRepositoryName))"/> @app.GitHubRepositoryName</div>
+                            <div><MudIconButton Icon="@Icons.Material.Filled.BackupTable" OnClick="@(() => GoToMongo(env.MongoDatabaseName))"/> @env.MongoDatabaseName</div>
+                            <div><MudIconButton Icon="@Icons.Material.Filled.Terminal" OnClick="@(() => GoToSecureShell(env.SecureShellName))"/> @env.SecureShellName</div>
+                        </MudStack>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Color="Color.Warning" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => GoToApp(env))">Edit</MudButton>
+                        <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.LocalShipping" OnClick="@(() => Deploy(env))">Deploy</MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    private ApplicationEnvironments[] _apps = Array.Empty<ApplicationEnvironments>();
+
+    [Inject] IApplicationStore ApplicationStore { get; set; } = default!;
+    [Inject] DeploymentManager DeploymentManager { get; set; } = default!;
+
+    protected override async Task OnSafeInitializedAsync()
+    {
+        await base.OnSafeInitializedAsync();
+        _apps = await ApplicationStore.GetAllEnvironments();
+    }
+
+
+    async Task Deploy(ApplicationEnvironmentProfile env)
+    {
+        await DeploymentManager.DeployApplication(env.ParentName!, env.Name);
+        await DialogService.ShowMessageBox($"Deploy {env.ParentName} {env.Name}", "Deployment complete");
+    }
+
+    
+    void GoToApp(ApplicationEnvironmentProfile env) =>
+        NavigationManager.NavigateToProfile<ApplicationEnvironmentProfile>(env.Name, env.ParentName);
+    
+    void GoToGitHub(string? name) => NavigationManager.NavigateToProfile<GitHubRepositoryProfile>(name);
+    void GoToMongo(string? name) => NavigationManager.NavigateToProfile<MongoDatabaseProfile>(name);
+    void GoToSecureShell(string? name) => NavigationManager.NavigateToProfile<SecureShellProfile>(name);
+}
 

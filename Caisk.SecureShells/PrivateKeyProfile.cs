@@ -1,7 +1,6 @@
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Crypto.Signers;
 using Org.BouncyCastle.Crypto.Utilities;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;

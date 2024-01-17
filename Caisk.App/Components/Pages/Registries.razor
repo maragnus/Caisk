@@ -1,6 +1,5 @@
 ﻿@page "/registries"
 @using Caisk.Docker
-@using Caisk.App.Components.Modals
 @inherits BasePage
 @rendermode InteractiveServer
 
@@ -17,7 +16,7 @@
 }
 else
 {
-    <MudTable T="RegistryProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
+    <MudTable T="RegistryProfile" Items="_profiles" SortLabel="Sort By" Hover OnRowClick="@OpenProfile" Breakpoint="Breakpoint.Sm">
         <HeaderContent>
             <MudTh><MudTableSortLabel SortBy="new Func<RegistryProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<RegistryProfile, object>(x=>x.HostName!)">Host Name</MudTableSortLabel></MudTh>
@@ -29,7 +28,7 @@ else
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Host">@context.HostName</MudTd>
             <MudTd DataLabel="User">@context.UserName</MudTd>
-            <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
+            <MudTd DataLabel="Added" HideSmall>@Common.Date(context.Created)</MudTd>
             <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
         </RowTemplate>
         <PagerContent>

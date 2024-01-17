@@ -16,7 +16,7 @@
 }
 else
 {
-    <MudTable T="GitHubRepositoryProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
+    <MudTable T="GitHubRepositoryProfile" Items="_profiles" SortLabel="Sort By" Hover OnRowClick="@OpenProfile" Breakpoint="Breakpoint.Sm">
         <HeaderContent>
             <MudTh>
                 <MudTableSortLabel SortBy="new Func<GitHubRepositoryProfile, object>(x => x.Name)">Name</MudTableSortLabel>
@@ -70,4 +70,5 @@ else
 
     private void OpenProfile(TableRowClickEventArgs<GitHubRepositoryProfile> row) =>
         NavigationManager.NavigateToProfile<GitHubRepositoryProfile>(row.Item.Name);
+
 }

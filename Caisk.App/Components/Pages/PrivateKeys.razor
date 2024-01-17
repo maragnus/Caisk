@@ -16,7 +16,7 @@
 }
 else
 {
-    <MudTable T="PrivateKeyProfile" Items="_profiles" Hover="true" SortLabel="Sort By" Elevation="0" OnRowClick="@OpenProfile">
+    <MudTable T="PrivateKeyProfile" Items="_profiles" SortLabel="Sort By" Hover OnRowClick="@OpenProfile" Breakpoint="Breakpoint.Sm">
         <HeaderContent>
             <MudTh>
                 <MudTableSortLabel SortBy="new Func<PrivateKeyProfile, object>(x => x.Name)">Name</MudTableSortLabel>

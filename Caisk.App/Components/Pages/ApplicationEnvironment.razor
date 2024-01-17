@@ -10,7 +10,7 @@
 <PageTitle>Application: @ParentName/@Name (Caisk)</PageTitle>
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" ConfirmExternalNavigation="IsTouched"/>
 
-<MudContainer MaxWidth="MaxWidth.Small">
+<MudContainer MaxWidth="MaxWidth.Medium">
     <MudText Typo="Typo.h4" GutterBottom="true">Application Environment</MudText>
     <MudText Class="mb-8">Configure, update, deploy application environment</MudText>
 
@@ -25,9 +25,11 @@
                 <MudStack Spacing="4">
                     <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
                     <MudTextField Label="Application" ReadOnly Value="Profile.ParentName"/>
-                    <ProfileSelector T="MongoDatabaseProfile" Label="Mongo Database" @bind-Value="Profile.MongoDatabaseName" Icon="@Icons.Material.Filled.BackupTable" />
-                    <ProfileSelector T="SecureShellProfile" Label="Secure Shell" @bind-Value="Profile.SecureShellName" Icon="@Icons.Material.Filled.Terminal" />
+                    <ProfileSelector T="MongoDatabaseProfile" Label="Mongo Database" @bind-Value="Profile.MongoDatabaseName" Icon="@Icons.Material.Filled.BackupTable"/>
+                    <ProfileSelector T="SecureShellProfile" Label="Secure Shell" @bind-Value="Profile.SecureShellName" Icon="@Icons.Material.Filled.Terminal"/>
                     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
+                        <MudButton OnClick="@EditDockerCompose" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit">Docker Compose</MudButton>
+                        <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
                         @if (!IsNew)
                         {
                             <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="@Delete" Color="Color.Error">Delete</MudButton>
@@ -42,3 +44,13 @@
         }
     </MudPaper>
 </MudContainer>
+
+@code {
+
+    private async Task EditDockerCompose()
+    {
+        await Save();
+        NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + "/docker-compose");
+    }
+
+}
