@@ -1,5 +1,6 @@
 ﻿@page "/github/{Name}"
 @using Caisk.GitHub
+@using Caisk.Deploy
 @inherits BaseProfileEditor<GitHubRepositoryProfile, IGitHubRepositoryStore>
 
 @rendermode InteractiveServer
@@ -8,7 +9,7 @@
 <PageTitle>GitHub Repository: @Name (Caisk)</PageTitle>
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" ConfirmExternalNavigation="IsTouched"/>
 
-<MudContainer MaxWidth="MaxWidth.Small">
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-4">
     <MudText Typo="Typo.h4" GutterBottom="true">GitHub Repository</MudText>
     <MudText Class="mb-8">Configure SSH connection</MudText>
 
@@ -25,7 +26,15 @@
                     <MudTextField Label="Organization Name" Required Immediate InputType="InputType.Text" @bind-Value="Profile.OrganizationName"/>
                     <MudTextField Label="Repository Name" Immediate InputType="InputType.Text" @bind-Value="Profile.RepositoryName"/>
                     <MudTextField Label="Token" Immediate InputType="InputType.Password" @bind-Value="Profile.Token"/>
-
+                    <MudField Label="Workflows" Adornment="Adornment.End" OnAdornmentClick="Refresh" AdornmentIcon="@Icons.Material.Filled.Refresh" AdornmentColor="Color.Primary">
+                        <MudChipSet>
+                            @foreach (var workflow in Profile.Workflows)
+                            {
+                                <MudChip Disabled Icon="@Icons.Material.Filled.Settings"><span title="@workflow.Id">@workflow.Name</span></MudChip>
+                            }
+                        </MudChipSet>
+                    </MudField>
+                    
                     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
                         @if (!IsNew)
                         {
@@ -41,3 +50,17 @@
         }
     </MudPaper>
 </MudContainer>
+
+@code {
+
+    async Task Refresh()
+    {
+        await Save();
+        await SafeActionAsync(async () =>
+        {
+            await DeploymentManager.UpdateGitHubWorkflows(Profile);
+            await Save();
+        });
+    }
+
+}

@@ -7,6 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Caisk.Common\Caisk.Common.csproj" />
+      <ProjectReference Include="..\Caisk.Docker\Caisk.Docker.csproj" />
       <ProjectReference Include="..\Caisk.Objects\Caisk.Objects.csproj" />
     </ItemGroup>
 

@@ -1,8 +1,6 @@
 ﻿@page "/apps/{ParentName}/{Name}/deploy"
 @using Caisk.Applications
 @using Caisk.Deploy
-@using Caisk.Managers.Mongo
-@using Caisk.SecureShells
 @inherits BaseProfileEditor<ApplicationEnvironmentProfile, IApplicationEnvironmentStore>
 
 @rendermode InteractiveServer
@@ -11,7 +9,7 @@
 <PageTitle>Deploy: @ParentName/@Name (Caisk)</PageTitle>
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" ConfirmExternalNavigation="IsTouched"/>
 
-<MudContainer MaxWidth="MaxWidth.Medium">
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
     <MudText Typo="Typo.h4" GutterBottom="true">Deploy</MudText>
     <MudText Class="mb-8">Deploy an application environment</MudText>
 
@@ -22,26 +20,18 @@
         }
         else
         {
-            <MudForm Model="Profile" @bind-IsValid="IsValid" @bind-IsTouched="IsTouched">
-                <MudStack Spacing="4">
-                    <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
-                    <MudTextField Label="Application" ReadOnly Value="Profile.ParentName"/>
-                    <ProfileSelector T="MongoDatabaseProfile" @bind-Value="Profile.MongoDatabaseName"/>
-                    <ProfileSelector T="SecureShellProfile" @bind-Value="Profile.SecureShellName"/>
-                    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
-                        <MudButton OnClick="@EditDockerCompose" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit">Docker Compose</MudButton>
-                        <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
-                        @if (!IsNew)
-                        {
-                            <MudButton StartIcon="@Icons.Material.Filled.Delete" OnClick="@Delete" Color="Color.Error">Delete</MudButton>
-                            <MudButton StartIcon="@Icons.Material.Filled.Edit" OnClick="@Rename" Color="Color.Warning">Rename</MudButton>
-                            <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
-                        }
-                        <MudButton OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
-                        <MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="@SaveAndClose" Color="Color.Primary" Variant="Variant.Filled" Disabled="!IsValid">Store</MudButton>
-                    </MudStack>
+            <MudStack Spacing="4">
+                <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
+                <MudTextField Label="Application" ReadOnly Value="Profile.ParentName"/>
+               
+                
+                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
+                    <MudButton OnClick="@DeployApp" Color="Color.Info" StartIcon="@Icons.Material.Filled.RocketLaunch">Deploy</MudButton>
+                    <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
+                    <MudButton StartIcon="@Common.ApplicationEnvironmentProfileIcon"  OnClick="@GoToEnvironment" Color="Color.Default">Environment</MudButton>
+                    <MudButton StartIcon="@Common.ApplicationProfileIcon"  OnClick="@GoToApplication" Color="Color.Default">Application</MudButton>
                 </MudStack>
-            </MudForm>
+            </MudStack>
         }
     </MudPaper>
 </MudContainer>
@@ -49,17 +39,18 @@
 @code {
     [Inject] DeploymentManager DeploymentManager { get; set; } = default!;
 
-    private async Task EditDockerCompose()
-    {
-        await Save();
-        NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + "/docker-compose");
-    }
+    private void GoToEnvironment() =>
+        NavigationManager.NavigateToProfile<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName);
+    
+    private void GoToApplication() =>
+        NavigationManager.NavigateToProfile<ApplicationProfile>(Profile.ParentName!);
 
-    async Task DeployApp(ApplicationEnvironmentProfile env)
+    async Task DeployApp()
     {
-        NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(env.Name, env.ParentName) + "/deploy");
-
-        await DeploymentManager.DeployApplication(env.ParentName!, env.Name);
-        await DialogService.ShowMessageBox($"Deploy {env.ParentName} {env.Name}", "Deployment complete");
+        await SafeActionAsync(async () =>
+        {
+            await DeploymentManager.DeployApplication(Profile.ParentName!, Profile.Name);
+            await DialogService.ShowMessageBox($"Deploy {Profile.ParentName} {Profile.Name}", "Deployment complete");
+        });
     }
 }

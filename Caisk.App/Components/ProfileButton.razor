@@ -1,0 +1,18 @@
+﻿@typeparam T where T : Caisk.Objects.ObjectProfile, new()
+
+<MudButton StartIcon="@(Common.ProfileIcon<T>())" OnClick="@(() => NavigationManager.NavigateToProfile<T>(Name, ParentName))">
+    @if (string.IsNullOrWhiteSpace(ParentName))
+    {
+        @Name
+    }
+    else
+    {
+        @($"{ParentName} / {Name}")
+    }
+</MudButton>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Parameter] public string Name { get; set; } = default!;
+    [Parameter] public string? ParentName { get; set; }
+}

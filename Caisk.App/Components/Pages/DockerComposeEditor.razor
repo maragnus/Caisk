@@ -1,22 +1,24 @@
 ﻿@page "/apps/{ParentName}/{Name}/docker-compose"
 @using Caisk.Applications
+@using Caisk.Deploy
 @inherits BasePage
 
 @rendermode InteractiveServer
 
-<NavigationLock OnBeforeInternalNavigation="Callback" ConfirmExternalNavigation="_code != _originalCode" />
+<NavigationLock OnBeforeInternalNavigation="Callback" ConfirmExternalNavigation="_code != _originalCode"/>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudTextField Label="docker-compose.yaml" T="string" Lines="24" @bind-Value="_code" Variant="Variant.Outlined" InputMode="InputMode.text" Immediate DebounceInterval="2" spellcheck="false"/>
 
-<MudTextField Label="docker-compose.yaml" T="string" Lines="24" @bind-Value="_code" Variant="Variant.Outlined" InputMode="InputMode.text" Immediate DebounceInterval="2" spellcheck="false"/>
-
-<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4" Class="mt-4">
-    <MudButton ButtonType="ButtonType.Button" OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
-    <MudButton ButtonType="ButtonType.Button" StartIcon="@Icons.Material.Filled.Save" OnClick="@Save" Color="Color.Primary" Variant="Variant.Filled" Disabled="_code == _originalCode">Save</MudButton>
-</MudStack>
+    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4" Class="mt-4">
+        <MudButton ButtonType="ButtonType.Button" OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Button" StartIcon="@Icons.Material.Filled.Save" OnClick="@Save" Color="Color.Primary" Variant="Variant.Filled" Disabled="_code == _originalCode">Save</MudButton>
+    </MudStack>
+</MudContainer>
 
 @code {
-    [Parameter] public string Name { get; init; } = default!;
-    [Parameter] public string ParentName { get; init; } = default!;
-    [Inject] IApplicationEnvironmentStore ApplicationEnvironmentStore { get; set; } = default!;
+    [Parameter] public string Name { get; set; } = default!;
+    [Parameter] public string ParentName { get; set; } = default!;
+    [Inject] IApplicationEnvironmentStore ApplicationEnvironmentStore { get; init; } = default!;
 
     string _originalCode = string.Empty;
     string _code = string.Empty;
@@ -42,6 +44,7 @@
         await SafeActionAsync(async () =>
         {
             var profile = await ApplicationEnvironmentStore.Get(Name, ParentName) ?? throw new Exception("Not found");
+            DeploymentManager.UpdateServices(profile);
             _code = _originalCode = _code.Trim();
             profile.DockerCompose = _code;
             await ApplicationEnvironmentStore.Store(profile);
@@ -52,7 +55,7 @@
     private async Task Callback(LocationChangingContext context)
     {
         if (_code == _originalCode) return;
-        
+
         var result = await DialogService.ShowMessageBox($"Changed", "Would you like to save before leaving?", "Yes, Save Changes", "No, Abandon Changes", "Cancel");
         if (result == true) await Save();
         else if (result == null) context.PreventNavigation();

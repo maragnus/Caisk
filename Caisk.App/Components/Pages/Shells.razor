@@ -7,38 +7,52 @@
 
 <PageTitle>Secure Shells (Caisk)</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Secure Shells</MudText>
-<MudText Class="mb-8">Manage docker registry hosts and credentials</MudText>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" GutterBottom="true">Secure Shells</MudText>
+    <MudText Class="mb-8">Manage docker registry hosts and credentials</MudText>
 
-@if (IsLoading)
-{
-    <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
-}
-else
-{
-    <MudTable T="SecureShellProfile" Items="_profiles" SortLabel="Sort By" Hover OnRowClick="@OpenProfile" Breakpoint="Breakpoint.Sm">
-        <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.HostName!)">Host Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.UserName!)">User Name</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.KeyPairName!)">Private Key</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Created)">Added</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x=>x.Updated)">Updated</MudTableSortLabel></MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Host Name">@context.HostName</MudTd>
-            <MudTd DataLabel="User Name">@context.UserName</MudTd>
-            <MudTd DataLabel="Key Pair" HideSmall>@context.KeyPairName</MudTd>
-            <MudTd DataLabel="Added" HideSmall>@Common.Date(context.Created)</MudTd>
-            <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager PageSizeOptions="new[]{50, 100}"/>
-        </PagerContent>
-    </MudTable>
-    <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@AddClick" Color="Color.Primary">Add Secure Shell</MudButton>
-}
+    @if (IsLoading)
+    {
+        <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
+    }
+    else
+    {
+        <MudTable T="SecureShellProfile" Items="_profiles" SortLabel="Sort By" Hover OnRowClick="@OpenProfile" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x => x.Name)">Name</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x => x.HostName!)">Host Name</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x => x.UserName!)">User Name</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x => x.KeyPairName!)">Private Key</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x => x.Created)">Added</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<SecureShellProfile, object>(x => x.Updated)">Updated</MudTableSortLabel>
+                </MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Host Name">@context.HostName</MudTd>
+                <MudTd DataLabel="User Name">@context.UserName</MudTd>
+                <MudTd DataLabel="Key Pair" HideSmall>@context.KeyPairName</MudTd>
+                <MudTd DataLabel="Added" HideSmall>@Common.Date(context.Created)</MudTd>
+                <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new[] { 50, 100 }"/>
+            </PagerContent>
+        </MudTable>
+        <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@AddClick" Color="Color.Primary">Add Secure Shell</MudButton>
+    }
+</MudContainer>
 
 @code {
     private SecureShellProfile[] _profiles = Array.Empty<SecureShellProfile>();

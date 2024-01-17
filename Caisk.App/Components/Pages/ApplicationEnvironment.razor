@@ -1,5 +1,6 @@
 ﻿@page "/apps/{ParentName}/{Name}"
 @using Caisk.Applications
+@using Caisk.GitHub
 @using Caisk.Managers.Mongo
 @using Caisk.SecureShells
 @inherits BaseProfileEditor<ApplicationEnvironmentProfile, IApplicationEnvironmentStore>
@@ -10,7 +11,7 @@
 <PageTitle>Application: @ParentName/@Name (Caisk)</PageTitle>
 <NavigationLock OnBeforeInternalNavigation="OnBeforeInternalNavigation" ConfirmExternalNavigation="IsTouched"/>
 
-<MudContainer MaxWidth="MaxWidth.Medium">
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
     <MudText Typo="Typo.h4" GutterBottom="true">Application Environment</MudText>
     <MudText Class="mb-8">Configure, update, deploy application environment</MudText>
 
@@ -25,8 +26,27 @@
                 <MudStack Spacing="4">
                     <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
                     <MudTextField Label="Application" ReadOnly Value="Profile.ParentName"/>
+                    <MudTextField Label="Entry Urls (semi-colon delimited)" Value="Profile.EntryUrl"/>
+                    <MudTextField Label="Health Check Url" Value="Profile.HealthCheckUrl"/>
                     <ProfileSelector T="MongoDatabaseProfile" @bind-Value="Profile.MongoDatabaseName"/>
                     <ProfileSelector T="SecureShellProfile" @bind-Value="Profile.SecureShellName"/>
+                    <MudGrid>
+                        @foreach (var service in Profile.Services)
+                        {
+                            <MudItem sm="6" md="3">
+                                <MudTextField T="string" Value="@service.Name" ReadOnly Label="Service"/>
+                            </MudItem>
+                            <MudItem sm="6" md="3">
+                                <ProfileSelector T="GitHubRepositoryProfile" @bind-Value="@service.RepositoryName" Label="Repository"/>
+                            </MudItem>
+                            <MudItem sm="6" md="3">
+                                <MudTextField T="string" @bind-Value="@service.ActionId" Label="Workflow ID"/>
+                            </MudItem>
+                            <MudItem sm="6" md="3">
+                                <MudTextField T="string" Value="@service.Image.ToString()" ReadOnly Label="Image"/>
+                            </MudItem>
+                        }
+                    </MudGrid>
                     <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
                         <MudButton StartIcon="@Icons.Material.Filled.Launch" OnClick="@Deploy" Color="Color.Error">Deploy</MudButton>
                         <MudButton OnClick="@EditDockerCompose" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit">Docker Compose</MudButton>
@@ -53,9 +73,11 @@
         await Save();
         NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + "/docker-compose");
     }
+
     private async Task Deploy()
     {
         await Save();
         NavigationManager.NavigateTo(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName) + "/deploy");
     }
+
 }
