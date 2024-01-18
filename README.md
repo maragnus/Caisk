@@ -1,17 +1,24 @@
 # Caisk
 _Container Apps In Simplified Kubernetes_
 
-This is a web application and set of tools designed for configuring and maintaining containerized applications on Docker servers or a Kubernetes (K8S) cluster for web administrators accustomed to running LAMP-style servers.
+This is a web application and set of tools designed for configuring and maintaining containerized applications via docker-compose or a Kubernetes (K8S) cluster.
 
-Simplicity of LAMP on Docker and Kubernetes.
+Caisk uses an opinionated ecosystem to facilitate rapid deployment of containerized applications on Kubernetes and Docker.
 
-This installs and manages:
+This ecosystem includes:
+* **Container Manager** with [Docker Compose](https://docs.docker.com/compose/install/)
+* **GitHub Actions** for building docker images
+* **Private Repository** for storing build artifacts
 * **Ingress** and **Load Balancing** with [Traefik](https://traefik.io/traefik/)
 * **HTTPS SSL** with [Let's Encrypt](https://letsencrypt.org/) and [cert-manager](https://cert-manager.io/)
 * Secure deployments of **databases**
   * [MongoDB Community Edition](https://www.mongodb.com/)
   * [PostgreSQL](https://www.postgresql.org/)
-* **Secret Management** handled internally
+* **Secret Management** handled internally via [LiteDB](https://www.litedb.org/)
+
+## Important File Locations
+- On the host computer, the LiteDB database by default is located at `~/.caisk/caisk.db`
+- On the remote shells, docker-compose is located at `~/.caisk/ApplicationName/EnvironmentName/docker-compose.yaml`
 
 ## Applications
 An **Application** represents a single application and manages respective Kubernetes Objects. And **Application Group** is a collection of Applications that can share **Managed Secrets** and other resources between applications in the same group.
@@ -44,14 +51,14 @@ The following Kubernetes Objects are managed at the Application level
 While this application is designed to host multiple unrelated applications, it does not currently provide a principle of least privilege with individual access permissions.
 
 * **Kubernetes** is accessed directly using local `kubectl` or via SSH with namespace: `ApplicationName-EnvironmentName` 
-* **Docker Compose** files are stored on the Secure Shell account: `~/.caisk/ApplicationName/EnvironmentName`
+* **Docker Compose** stores files on the Secure Shell account: `~/.caisk/ApplicationName/EnvironmentName`
 
 ## Managed Secrets
 Databases are managed by Caisk. Databases and users are created by Caisk and stored as K8S Secrets. These can be linked to applications via configuration files or environment variables.
 Other secrets (such as API keys) can be shared with multiple applications or application groups.
 
-* **Kubernetes** stores as Secrets
-* **Docker Compose** stores in environment files on the filesystem
+* **Kubernetes** stores in Secrets
+* **Docker Compose** stores in docker-compose or environment variable files on the filesystem
 
 # Usage and License
 This uses the GPL v3 license with some additional clauses and clarifications:
