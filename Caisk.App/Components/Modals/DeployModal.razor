@@ -35,6 +35,7 @@
     [Inject] IDialogService DialogService { get; init; } = default!;
     [Parameter] public string ParentName { get; set; } = default!;
     [Parameter] public string Name { get; set; } = default!;
+    [Parameter] public bool Stop { get; set; }
 
     private bool _isRunning, _isStarted;
     private bool _indeterminate = true;
@@ -62,19 +63,32 @@
         _status = "Initializing...";
         StateHasChanged();
 
-        await foreach (var status in DeploymentManager.DeployApplication(ParentName!, Name, _cancelSource.Token))
+        try
         {
-            _status = status.StatusText;
-            _progress = status.Value;
-            _max = status.Max;
-            _indeterminate = status.IsIndeterminate;
-            StateHasChanged();
-            Console.WriteLine(status);
-        }
+            var events = Stop
+                ? DeploymentManager.StopApplication(ParentName!, Name, _cancelSource.Token)
+                : DeploymentManager.DeployApplication(ParentName!, Name, _cancelSource.Token);
 
-        _isRunning = false;
-        StateHasChanged();
-        await DialogService.ShowMessageBox($"Deployed {ParentName} {Name}", "Deployment complete");
+            await foreach (var status in events.WithCancellation(_cancelSource.Token))
+            {
+                _status = status.StatusText;
+                _progress = status.Value;
+                _max = status.Max;
+                _indeterminate = status.IsIndeterminate;
+                StateHasChanged();
+            }
+
+            await DialogService.ShowMessageBox($"{(Stop ? "Stopped" : "Deployed")} {ParentName} {Name}", "Deployment complete");
+        }
+        catch (Exception exception)
+        {
+            await DialogService.ShowMessageBox($"Deployment Failure {ParentName} {Name}", "Deployment failed due to exception: " + exception.Message);
+        }
+        finally
+        {
+            _isRunning = false;
+            StateHasChanged();
+        }
     }
 
 }

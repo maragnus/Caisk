@@ -39,7 +39,7 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
             return;
         }
 
-        var profile = await ProfileStore.Get(Name, ParentName);
+        var profile = await ProfileStore.TryGet(Name, ParentName);
         IsNew = profile == null;
         Profile = profile ?? await ProfileStore.Create(Name, ParentName);
     }

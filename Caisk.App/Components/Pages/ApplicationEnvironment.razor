@@ -3,6 +3,7 @@
 @using Caisk.Managers.Mongo
 @using Caisk.SecureShells
 @using Caisk.Applications
+@using Caisk.Docker
 @inherits BaseProfileEditor<Caisk.Applications.ApplicationEnvironmentProfile, Caisk.Applications.IApplicationEnvironmentStore>
 
 @rendermode InteractiveServer
@@ -36,10 +37,13 @@
                             <MudItem sm="6" md="3">
                                 <MudTextField T="string" Value="@service.Name" ReadOnly Label="Service"/>
                             </MudItem>
-                            <MudItem sm="6" md="3">
+                            <MudItem sm="6" md="4">
+                                <ProfileSelector T="RegistryProfile" @bind-Value="@service.RegistryName" Label="Registry"/>
+                            </MudItem>
+                            <MudItem sm="6" md="4">
                                 <ProfileSelector T="GitHubRepositoryProfile" @bind-Value="@service.RepositoryName" Label="Repository"/>
                             </MudItem>
-                            <MudItem sm="6" md="3">
+                            <MudItem sm="6" md="4">
                                 <MudSelect T="string" @bind-Value="@service.ActionId" Label="Workflow ID">
                                     <MudSelectItem T="string" Value="@null">None</MudSelectItem>
                                     @foreach (var workflow in GetWorkflows(service.RepositoryName))
@@ -116,21 +120,30 @@
 
     protected override async Task Save()
     {
-        var profile = await ProfileStore.Require(Name!, ParentName);
-        profile.EntryUrl = Profile.EntryUrl;
-        profile.HealthCheckUrl = Profile.HealthCheckUrl;
-        profile.MongoDatabaseName = Profile.MongoDatabaseName;
-        profile.SecureShellName = Profile.SecureShellName;
-        profile.Services.Clear();
-        profile.Services.AddRange(Profile.Services);
-        foreach (var src in Profile.Files)
+        await SafeActionAsync(async () =>
         {
-            var dest = profile.Files.FirstOrDefault(file => file.FileName == src.FileName);
-            if (dest != null) dest.Base64 = src.Base64;
-        }
+            if (IsNew)
+            {
+                await ProfileStore.Store(Profile);
+                return;
+            }
 
-        await ProfileStore.Store(profile);
-        Profile = profile;
+            var profile = await ProfileStore.Require(Name!, ParentName);
+            profile.EntryUrl = Profile.EntryUrl;
+            profile.HealthCheckUrl = Profile.HealthCheckUrl;
+            profile.MongoDatabaseName = Profile.MongoDatabaseName;
+            profile.SecureShellName = Profile.SecureShellName;
+            profile.Services.Clear();
+            profile.Services.AddRange(Profile.Services);
+            foreach (var src in Profile.Files)
+            {
+                var dest = profile.Files.FirstOrDefault(file => file.FileName == src.FileName);
+                if (dest != null) dest.Base64 = src.Base64;
+            }
+
+            await ProfileStore.Store(profile);
+            Profile = profile;
+        });
     }
 
     private async Task Deploy()

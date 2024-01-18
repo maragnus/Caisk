@@ -15,7 +15,7 @@ public readonly struct DockerImage(string? registry, string? imageName, string? 
     {
         if (string.IsNullOrWhiteSpace(value))
             return new DockerImage(null, null, null);
-        var parts = Regex.Match(value, @"(([\w.]+)/)?(\w+)(:(\w+))");
+        var parts = Regex.Match(value, @"((.+)/)?(\w+)(:(\w+))");
         return new DockerImage(parts.Groups[2].Value, parts.Groups[3].Value, parts.Groups[5].Value);
     }
 

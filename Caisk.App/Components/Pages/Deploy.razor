@@ -16,39 +16,39 @@
     <MudText Class="mb-8">Deploy an application environment</MudText>
 
     <MudPaper Class="pa-4">
-        @if (IsLoading)
-        {
-            <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
-        }
-        else
-        {
-            <MudStack Spacing="4">
-                <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
-                <MudTextField Label="Application" ReadOnly Value="Profile.ParentName"/>
+        <MudStack Spacing="4">
+            <MudTextField Label="Name" ReadOnly Value="Name"/>
+            <MudTextField Label="Application" ReadOnly Value="ParentName"/>
 
-                <MudInputLabel>Services</MudInputLabel>
-                @foreach (var service in _services)
-                {
-                    <MudStack Row AlignItems="AlignItems.Center">
-                        <MudSelect T="DockerImage?" Label="@service.Service.Name" @bind-Value="@service.Service.Image">
-                            @foreach (var run in service.Runs)
-                            {
-                                <MudSelectItem T="DockerImage?" Value="@run.Image">@run.Image (@run.Status.Status)</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudIconButton Size="Size.Medium" Icon="@Icons.Material.Filled.Refresh" OnClick="@Refresh" Color="Color.Primary"/>
-                    </MudStack>
-                }
-
-                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
-                    <MudButton OnClick="@Save" Color="Color.Info" StartIcon="@Icons.Material.Filled.Save">Save</MudButton>
-                    <MudButton OnClick="@DeployApp" Color="Color.Info" StartIcon="@Icons.Material.Filled.RocketLaunch">Deploy</MudButton>
-                    <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
-                    <MudButton StartIcon="@Common.ApplicationEnvironmentProfileIcon" Href="@(Common.ProfileUrl<ApplicationEnvironmentProfile>(Profile.Name, Profile.ParentName))" Color="Color.Default">Environment</MudButton>
-                    <MudButton StartIcon="@Common.ApplicationProfileIcon" Href="@(Common.ProfileUrl<ApplicationProfile>(Profile.ParentName!))" Color="Color.Default">Application</MudButton>
+            <MudInputLabel>Services</MudInputLabel>
+            @if (IsLoading)
+            {
+                <MudProgressLinear Color="Color.Info" Indeterminate="true"/>
+            }
+            @foreach (var service in _services)
+            {
+                <MudStack Row AlignItems="AlignItems.Center">
+                    <MudSelect T="DockerImage?" Label="@service.Service.Name" @bind-Value="@service.Service.Image" Disabled="IsLoading">
+                        @foreach (var run in service.Runs)
+                        {
+                            <MudSelectItem T="DockerImage?" Value="@run.Image">@run.Image (@run.Status.Status)</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudIconButton Size="Size.Medium" Icon="@Icons.Material.Filled.Refresh" OnClick="@Refresh" Color="Color.Primary"/>
                 </MudStack>
+            }
+
+            <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="4">
+                <MudButton OnClick="@DeployApp" Color="Color.Info" StartIcon="@Icons.Material.Filled.RocketLaunch" Disabled="IsLoading">Deploy</MudButton>
+                <MudButton OnClick="@StopApp" Color="Color.Error" StartIcon="@Icons.Material.Filled.StopCircle" Disabled="IsLoading">Stop</MudButton>
+                <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
+                <MudButton OnClick="@Save" Color="Color.Info" StartIcon="@Icons.Material.Filled.Save" Disabled="IsLoading">Save</MudButton>
+                <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
+                <MudButton StartIcon="@Common.ApplicationEnvironmentProfileIcon" Href="@(Common.ProfileUrl<ApplicationEnvironmentProfile>(Name!, ParentName))" Color="Color.Default">Environment</MudButton>
+                <MudButton StartIcon="@Common.ApplicationProfileIcon" Href="@(Common.ProfileUrl<ApplicationProfile>(ParentName!))" Color="Color.Default">Application</MudButton>
             </MudStack>
-        }
+        </MudStack>
+
     </MudPaper>
 </MudContainer>
 
@@ -60,7 +60,7 @@
     protected override async Task OnSafeParametersSetAsync()
     {
         await base.OnSafeParametersSetAsync();
-        await Refresh();
+        await UnsafeRefresh();
     }
 
     record ServiceInfo(Service Service, RunInfo[] Runs);
@@ -69,6 +69,7 @@
 
     protected override async Task Save()
     {
+        IsLoading = true;
         await SafeActionAsync(async () =>
         {
             var profile = await ProfileStore.Require(Name!, ParentName);
@@ -82,23 +83,38 @@
             DeploymentManager.ApplyServices(profile);
             await ProfileStore.Store(profile);
             Profile = profile;
+            await Refresh();
         });
+        IsLoading = false;
     }
 
     async Task DeployApp()
     {
+        await Save();
         await SafeActionAsync(async () =>
         {
-            var profile = await ProfileStore.Require(Name!, ParentName);
-            profile.Services.Clear();
-            profile.Services.AddRange(Profile.Services);
             var parameters = new DialogParameters { { nameof(DeployModal.Name), Name }, { nameof(DeployModal.ParentName), ParentName } };
             await DialogService.ShowAsync<DeployModal>($"Deploying {ParentName} {Name}", parameters);
-            await ProfileStore.Store(profile);
+        });
+    }
+
+    async Task StopApp()
+    {
+        await SafeActionAsync(async () =>
+        {
+            var parameters = new DialogParameters { { nameof(DeployModal.Name), Name }, { nameof(DeployModal.ParentName), ParentName }, { nameof(DeployModal.Stop), true } };
+            await DialogService.ShowAsync<DeployModal>($"Stopping {ParentName} {Name}", parameters);
         });
     }
 
     private async Task Refresh()
+    {
+        IsLoading = true;
+        await SafeActionAsync(async () => { await UnsafeRefresh(); });
+        IsLoading = false;
+    }
+
+    private async Task UnsafeRefresh()
     {
         _services.Clear();
         foreach (var service in Profile.Services

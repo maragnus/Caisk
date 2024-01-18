@@ -7,9 +7,22 @@ public interface IObjectProfileStore<TProfile> where TProfile : ObjectProfile, n
     Task Store(TProfile profile);
     Task Rename(string oldName, string newName, string? parentName = default);
     Task Delete(string name, string? parentName = default);
+
+    /// <summary>
+    /// Gets the indicated profile and throws ProfileNotFoundException if it was not. If <paramref name="name"/> is null, returns null.
+    /// </summary>
     ValueTask<TProfile?> Get(string? name, string? parentName = default);
 
+    /// <summary>
+    /// Gets the indicated profile and null if it was not.
+    /// </summary>
+    ValueTask<TProfile?> TryGet(string? name, string? parentName = default);
+
+    /// <summary>
+    /// Gets the indicated profile and throws ProfileNotFoundException if it was not. If <paramref name="name"/> is null, throws ProfileNotFoundException.
+    /// </summary>
     ValueTask<TProfile> Require(string name, string? parentName = default);
+
     ValueTask<TProfile[]> Get(params string[] name);
     ValueTask<TProfile[]> GetAll(string? parentName = default);
     ValueTask<string[]> GetNames(string? parentName = default);

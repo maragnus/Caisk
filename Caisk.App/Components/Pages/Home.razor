@@ -14,8 +14,8 @@
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
     @foreach (var (app, envs) in _apps)
     {
-        <MudButton Size="Size.Large" StartIcon="@Common.ApplicationProfileIcon" Href="@(Common.ProfileUrl<ApplicationProfile>(app.Name))">@app.Name</MudButton>
-        <MudGrid Spacing="4" Class="mt-2">
+        <MudButton Size="Size.Large" StartIcon="@Common.ApplicationProfileIcon" Href="@(Common.ProfileUrl<ApplicationProfile>(app.Name))" Class="mt-4 mb-1">@app.Name</MudButton>
+        <MudGrid Spacing="4">
             @foreach (var env in envs)
             {
                 <MudItem xs="12" sm="6" md="4" lg="3" xl="2">

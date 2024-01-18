@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -35,8 +36,28 @@ public class DeploymentManager(IDataContext dataContext, SecureShellManager sshM
     private static readonly string[] RunningStatuses =
         { "in_progress", "queued", "requested", "waiting", "pending" };
 
+    public async IAsyncEnumerable<DeployStatusUpdate> StopApplication(string appName, string environmentName,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        yield return new DeployStatusUpdate("Loading deployment configuration...");
+        var (app, env) = await GetApplicationEnvironment(appName, environmentName);
+        var secureShellName = env.SecureShellName ?? throw new Exception("Secure Shell is required for deployment");
+        var ssh = await sshManager.CreateSecureShell(secureShellName);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        yield return new DeployStatusUpdate("Connecting to Secure Shell...", 1, 3);
+        await using var sh = await ssh.ConnectAsync();
+
+        cancellationToken.ThrowIfCancellationRequested();
+        yield return new DeployStatusUpdate("Stopping...", 2, 3);
+        var root = $"~/.caisk/{app.Name}/{env.Name}";
+        await sh.ExecuteAsync($"cd {root} && docker-compose -p {app.Name}-{env.Name} down", cancellationToken);
+
+        yield return new DeployStatusUpdate("Application stopped", 3, 3);
+    }
+
     public async IAsyncEnumerable<DeployStatusUpdate> DeployApplication(string appName, string environmentName,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         yield return new DeployStatusUpdate("Loading deployment configuration...");
         var (app, env) = await GetApplicationEnvironment(appName, environmentName);
@@ -96,6 +117,12 @@ public class DeploymentManager(IDataContext dataContext, SecureShellManager sshM
         await using var sh = await ssh.ConnectAsync();
         await sh.ExecuteAsync($"mkdir -p {root}", cancellationToken);
         await sh.ExecuteAsync($"echo '{yaml}' | base64 --decode > {composeFile}", cancellationToken);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        yield return new DeployStatusUpdate("Authenticating with Docker Registry...", ++progress, max);
+        var registry = await dataContext.RegistryStore.Require(app.RegistryName!);
+        await sh.ExecuteAsync($"docker login {registry.HostName} -u {registry.UserName} -p {registry.Password}",
+            cancellationToken);
 
         foreach (var file in env.Files)
         {

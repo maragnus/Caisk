@@ -17,6 +17,7 @@ public class Service
 {
     public string? Name { get; set; }
     public DockerImage? Image { get; set; }
+    public string? RegistryName { get; set; }
     public string? RepositoryName { get; set; }
     public string? ActionId { get; set; }
 }
