@@ -26,8 +26,8 @@
                         <MudTextField Label="Name" ReadOnly Value="Profile.Name"/>
                         <MudTextField Label="Host Name" Required Immediate InputType="InputType.Text" @bind-Value="Profile.HostName"/>
                         <MudTextField Label="User Name" Immediate InputType="InputType.Text" @bind-Value="Profile.UserName"/>
-                        <MudTextField Label="Machine Info" ReadOnly @bind-Value="Profile.MachineInfo"/>
-                        <MudTextField Label="Fingerprint" ReadOnly @bind-Value="Profile.Fingerprint"/>
+                        <MudTextField Label="Machine Info" ReadOnly Value="Profile.MachineInfo"/>
+                        <MudTextField Label="Fingerprint" ReadOnly Value="Profile.Fingerprint"/>
                     </MudItem>
                     <MudItem sm="12" md="6">
                         <MudTextField Label="User Password" Immediate InputType="InputType.Password" @bind-Value="Profile.Password"/>
@@ -62,6 +62,16 @@
 @code {
     private bool _isTesting;
     [Inject] public SecureShellManager SecureShellManager { get; init; } = default!;
+
+    protected override Task StoreProfile(SecureShellProfile save)
+    {
+        save.HostName = Profile.HostName;
+        save.UserName = Profile.UserName;
+        save.Password = Profile.Password;
+        save.RootPassword = Profile.RootPassword;
+        save.KeyPairName = Profile.KeyPairName;
+        return Task.CompletedTask;
+    }
 
     private async Task Test()
     {

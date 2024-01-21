@@ -1,4 +1,5 @@
 ﻿@page "/github/{Name}"
+@using Caisk.GitHub
 @using Caisk.Deploy
 @inherits BaseProfileEditor<Caisk.GitHub.GitHubRepositoryProfile, Caisk.GitHub.IGitHubRepositoryStore>
 
@@ -25,7 +26,7 @@
                     <MudTextField Label="Organization Name" Required Immediate InputType="InputType.Text" @bind-Value="Profile.OrganizationName"/>
                     <MudTextField Label="Repository Name" Immediate InputType="InputType.Text" @bind-Value="Profile.RepositoryName"/>
                     <MudTextField Label="Token" Immediate InputType="InputType.Password" @bind-Value="Profile.Token"/>
-                    <MudField Label="Workflows" Adornment="Adornment.End" OnAdornmentClick="Refresh" AdornmentIcon="@Icons.Material.Filled.Refresh" AdornmentColor="Color.Primary">
+                    <MudField Label="Workflows" Adornment="Adornment.End" OnAdornmentClick="RefreshWorkflows" AdornmentIcon="@Icons.Material.Filled.Refresh" AdornmentColor="Color.Primary">
                         <MudChipSet ReadOnly>
                             @foreach (var workflow in Profile.Workflows)
                             {
@@ -54,14 +55,17 @@
 
 @code {
 
-    async Task Refresh()
+    protected override async Task StoreProfile(GitHubRepositoryProfile save)
+    {
+        save.OrganizationName = Profile.OrganizationName;
+        save.RepositoryName = Profile.RepositoryName;
+        save.Token = Profile.Token;
+        await DeploymentManager.UpdateGitHubWorkflows(save, default);
+    }
+
+    async Task RefreshWorkflows()
     {
         await Save();
-        await SafeActionAsync(async () =>
-        {
-            await DeploymentManager.UpdateGitHubWorkflows(Profile, default);
-            await Save();
-        });
     }
 
 }

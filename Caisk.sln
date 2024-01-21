@@ -26,6 +26,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Caisk.Deploy", "Caisk.Deplo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Caisk.Common", "Caisk.Common\Caisk.Common.csproj", "{1412705A-72B7-4F55-9C58-509852542CAE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Caisk.Users", "Caisk.Users\Caisk.Users.csproj", "{77720ACC-9596-462E-ACA1-5C0FF1F195C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Caisk.Users.Tests", "Caisk.Users.Tests\Caisk.Users.Tests.csproj", "{3198F700-00B0-4F4D-BB13-2D272B8D8258}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,5 +88,13 @@ Global
 		{1412705A-72B7-4F55-9C58-509852542CAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1412705A-72B7-4F55-9C58-509852542CAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1412705A-72B7-4F55-9C58-509852542CAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77720ACC-9596-462E-ACA1-5C0FF1F195C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77720ACC-9596-462E-ACA1-5C0FF1F195C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77720ACC-9596-462E-ACA1-5C0FF1F195C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77720ACC-9596-462E-ACA1-5C0FF1F195C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3198F700-00B0-4F4D-BB13-2D272B8D8258}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3198F700-00B0-4F4D-BB13-2D272B8D8258}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3198F700-00B0-4F4D-BB13-2D272B8D8258}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3198F700-00B0-4F4D-BB13-2D272B8D8258}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

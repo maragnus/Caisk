@@ -18,6 +18,7 @@
         <ProjectReference Include="..\Caisk.Data.LiteDb\Caisk.Data.LiteDb.csproj"/>
         <ProjectReference Include="..\Caisk.Data\Caisk.Data.csproj"/>
         <ProjectReference Include="..\Caisk.Deploy\Caisk.Deploy.csproj"/>
+        <ProjectReference Include="..\Caisk.Users\Caisk.Users.csproj"/>
     </ItemGroup>
 
 </Project>

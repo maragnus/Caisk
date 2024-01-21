@@ -1,0 +1,67 @@
+﻿@using Caisk.Users
+<form @onsubmit="@FormSubmit">
+    <MudDialog DefaultFocus="DefaultFocus.FirstChild">
+        <DialogContent>
+            <MudImage Src="@_totpPng" ObjectFit="ObjectFit.Contain" Fluid/>
+            <MudTextField T="string" @bind-Value="_code" Label="Code" Validation="@((object)ValidateName)" Immediate Variant="Variant.Outlined"/>
+            <MudDivider/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" Disabled="!_isValid" OnClick="@FormSubmit">Save</MudButton>
+            <MudButton Color="Color.Error" OnClick="@Cancel">Cancel</MudButton>
+        </DialogActions>
+    </MudDialog>
+</form>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; init; } = default!;
+    [Inject] public IUserStore UserStore { get; init; } = default!;
+
+    [Parameter] public string Name { get; set; } = default!;
+
+    private string _secret = default!;
+    private string _totpPng = default!;
+    private string? _code;
+    private bool _isValid;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        var user = await UserStore.Require(Name);
+        _secret = UserUtility.GenerateTotpSecret();
+        var png = Convert.ToBase64String(UserUtility.TotpQrCodePng(user.Name, _secret));
+        _totpPng = $"data:image/png;base64,{png}";
+    }
+
+    private string? ValidateName(string? code)
+    {
+        _isValid = false;
+        if (string.IsNullOrWhiteSpace(code))
+            return "Code is required";
+
+        if (code.Length != UserUtility.TotpCodeLength)
+            return $"Code must be {UserUtility.TotpCodeLength} digits";
+
+        var now = DateTime.UtcNow;
+
+        if (!UserUtility.VerifyTotp(now, _secret, code))
+            return "Code is incorrect";
+
+        _isValid = true;
+        return null;
+    }
+
+    private async Task FormSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(_code) || !UserUtility.VerifyTotp(DateTime.UtcNow, _secret, _code))
+            return;
+
+        var user = await UserStore.Require(Name);
+        user.TotpSecret = _secret;
+        await UserStore.Store(user);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Close(DialogResult.Cancel());
+
+}

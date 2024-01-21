@@ -13,6 +13,7 @@
       <ProjectReference Include="..\Caisk.Mongo\Caisk.Mongo.csproj" />
       <ProjectReference Include="..\Caisk.Objects\Caisk.Objects.csproj" />
       <ProjectReference Include="..\Caisk.SecureShells\Caisk.SecureShells.csproj" />
+        <ProjectReference Include="..\Caisk.Users\Caisk.Users.csproj"/>
     </ItemGroup>
 
 </Project>

@@ -1,6 +1,7 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=dbb9a177_002Daad8_002D4f88_002D8896_002D99df4c086799/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="PrivateKeyTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=240e089e_002Daa41_002D4744_002Db784_002Dbaa4a62cbfdc/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="UtilityTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;MSTest::FF973D29-69CA-47A0-89D8-2D680902B2C9::net8.0::Caisk.SecureShells.Tests.PrivateKeyTests&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;MSTest::3198F700-00B0-4F4D-BB13-2D272B8D8258::net8.0::Caisk.Users.Tests.UtilityTests&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
+&lt;/SessionState&gt;</s:String>
+	</wpf:ResourceDictionary>

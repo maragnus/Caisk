@@ -56,3 +56,17 @@
         }
     </MudPaper>
 </MudContainer>
+
+@code {
+
+    protected override Task StoreProfile(RegistryProfile save)
+    {
+        save.HostName = Profile.HostName;
+        save.AuthenticationType = Profile.AuthenticationType;
+        save.UserName = Profile.UserName;
+        save.Password = Profile.Password;
+        save.BearerToken = Profile.BearerToken;
+        return Task.CompletedTask;
+    }
+
+}

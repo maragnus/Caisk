@@ -1,0 +1,66 @@
+﻿@page "/users"
+@using Caisk.Users
+@inherits BasePage
+@rendermode InteractiveServer
+
+<MyMudProviders/>
+
+<PageTitle>Users (Caisk)</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" GutterBottom="true">Users</MudText>
+    <MudText Class="mb-8">Manage user accounts</MudText>
+
+    @if (IsLoading)
+    {
+        <MudProgressCircular Color="Color.Default" Indeterminate="true"/>
+    }
+    else
+    {
+        <MudTable T="UserProfile" Items="_profiles" SortLabel="Sort By" Hover OnRowClick="@OpenProfile" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<UserProfile, object>(x => x.Name)">Name</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<UserProfile, object>(x => x.Created)">Added</MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="new Func<UserProfile, object>(x => x.Updated)">Updated</MudTableSortLabel>
+                </MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Added">@Common.Date(context.Created)</MudTd>
+                <MudTd DataLabel="Updated">@Common.Date(context.Updated)</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new[] { 50, 100 }"/>
+            </PagerContent>
+        </MudTable>
+        <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="@AddClick" Color="Color.Primary">Add User</MudButton>
+    }
+</MudContainer>
+
+@code {
+    private UserProfile[] _profiles = Array.Empty<UserProfile>();
+
+    [Inject] public IUserStore ProfileStore { get; set; } = default!;
+
+    protected override async Task OnSafeInitializedAsync() =>
+        _profiles = await ProfileStore.GetAll();
+
+    private async Task AddClick()
+    {
+        var names = _profiles.Select(p => p.Name).ToArray();
+        var parameters = new DialogParameters { { nameof(NewUserModal.Names), names } };
+        var modal = await DialogService.ShowAsync<NewUserModal>("Add User", parameters);
+        var result = await modal.Result;
+        if (result.Canceled) return;
+        NavigationManager.NavigateToProfile<UserProfile>((string)result.Data);
+    }
+
+    private void OpenProfile(TableRowClickEventArgs<UserProfile> row) =>
+        NavigationManager.NavigateToProfile<UserProfile>(row.Item.Name);
+
+}

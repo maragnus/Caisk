@@ -6,7 +6,7 @@ using MudBlazor;
 
 namespace Caisk.App.Components.Pages;
 
-public class BaseProfileEditor<TProfile, TStore> : BasePage
+public abstract class BaseProfileEditor<TProfile, TStore> : BasePage
     where TProfile : ObjectProfile, new()
     where TStore : IObjectProfileStore<TProfile>
 {
@@ -33,6 +33,12 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
 
     protected override async Task OnSafeParametersSetAsync()
     {
+        await base.OnSafeParametersSetAsync();
+        await Refresh();
+    }
+
+    protected async Task Refresh()
+    {
         if (string.IsNullOrWhiteSpace(Name))
         {
             Cancel();
@@ -46,8 +52,20 @@ public class BaseProfileEditor<TProfile, TStore> : BasePage
 
     protected virtual async Task Save()
     {
-        await SafeActionAsync(async () => { await ProfileStore.Store(Profile); });
+        await SafeActionAsync(async () =>
+        {
+            ObjectProfile.ValidateName(Name);
+            var profile = IsNew ? Profile : await ProfileStore.Require(Name!, ParentName);
+            await StoreProfile(profile);
+            if (!IsNew && ObjectProfile.Compare(profile, Profile))
+                return;
+            await ProfileStore.Store(profile);
+            IsNew = false;
+            Profile = profile;
+        });
     }
+
+    protected abstract Task StoreProfile(TProfile save);
 
     protected async Task SaveAndClose()
     {

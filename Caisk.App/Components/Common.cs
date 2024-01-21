@@ -4,6 +4,7 @@ using Caisk.GitHub;
 using Caisk.Managers.Mongo;
 using Caisk.Objects;
 using Caisk.SecureShells;
+using Caisk.Users;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
@@ -18,6 +19,7 @@ public static class Common
     public const string ApplicationEnvironmentProfileUrl = "/apps/{parent}";
     public const string GitHubRepositoryProfileUrl = "/github";
     public const string RegistryProfileUrl = "/registries";
+    public const string UserProfileUrl = "/users";
 
     public const string DashboardIcon = Icons.Material.Filled.Dashboard;
     public const string SecureShellProfileIcon = Icons.Material.Filled.Terminal;
@@ -27,6 +29,7 @@ public static class Common
     public const string ApplicationEnvironmentProfileIcon = Icons.Material.Filled.LocalShipping;
     public const string GitHubRepositoryProfileIcon = Icons.Custom.Brands.GitHub;
     public const string RegistryProfileIcon = Icons.Material.Filled.DirectionsBoat;
+    public const string UserProfileIcon = Icons.Material.Filled.SupervisorAccount;
 
     public const string DockerComposeYaml = "docker-compose.yaml";
 
@@ -38,7 +41,8 @@ public static class Common
         { typeof(ApplicationProfile), ApplicationProfileIcon },
         { typeof(ApplicationEnvironmentProfile), ApplicationEnvironmentProfileIcon },
         { typeof(GitHubRepositoryProfile), GitHubRepositoryProfileIcon },
-        { typeof(RegistryProfile), RegistryProfileIcon }
+        { typeof(RegistryProfile), RegistryProfileIcon },
+        { typeof(UserProfile), UserProfileIcon },
     };
 
     private static readonly Dictionary<Type, string> ProfileMap = new()
@@ -49,7 +53,8 @@ public static class Common
         { typeof(ApplicationProfile), ApplicationProfileUrl },
         { typeof(ApplicationEnvironmentProfile), ApplicationEnvironmentProfileUrl },
         { typeof(GitHubRepositoryProfile), GitHubRepositoryProfileUrl },
-        { typeof(RegistryProfile), RegistryProfileUrl }
+        { typeof(RegistryProfile), RegistryProfileUrl },
+        { typeof(UserProfile), UserProfileUrl },
     };
 
     public static string ProfileIcon<TProfile>()

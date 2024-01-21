@@ -3,7 +3,7 @@
 <form @onsubmit="@FormSubmit">
     <MudDialog DefaultFocus="DefaultFocus.FirstChild">
         <DialogContent>
-            <MudTextField T="string" @bind-Text="@_name" Label="Profile Name" Validation="@((object)ValidateName)" Immediate Variant="Variant.Outlined"/>
+            <MudTextField T="string" @bind-Value="@_name" Label="Profile Name" Validation="@((object)ValidateName)" Immediate Variant="Variant.Outlined"/>
             <MudRadioGroup T="PrivateKeyType" @bind-Value="@_type">
                 <MudRadio Option="PrivateKeyType.Dsa">DSA</MudRadio>
                 <MudRadio Option="PrivateKeyType.Rsa">RSA</MudRadio>

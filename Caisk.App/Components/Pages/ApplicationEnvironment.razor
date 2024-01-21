@@ -118,32 +118,21 @@
         _deployedFiles.AddRange(Profile.Files);
     }
 
-    protected override async Task Save()
+    protected override Task StoreProfile(ApplicationEnvironmentProfile save)
     {
-        await SafeActionAsync(async () =>
+        save.EntryUrl = Profile.EntryUrl;
+        save.HealthCheckUrl = Profile.HealthCheckUrl;
+        save.MongoDatabaseName = Profile.MongoDatabaseName;
+        save.SecureShellName = Profile.SecureShellName;
+        save.Services.Clear();
+        save.Services.AddRange(Profile.Services);
+        foreach (var src in Profile.Files)
         {
-            if (IsNew)
-            {
-                await ProfileStore.Store(Profile);
-                return;
-            }
+            var dest = save.Files.FirstOrDefault(file => file.FileName == src.FileName);
+            if (dest != null) dest.Base64 = src.Base64;
+        }
 
-            var profile = await ProfileStore.Require(Name!, ParentName);
-            profile.EntryUrl = Profile.EntryUrl;
-            profile.HealthCheckUrl = Profile.HealthCheckUrl;
-            profile.MongoDatabaseName = Profile.MongoDatabaseName;
-            profile.SecureShellName = Profile.SecureShellName;
-            profile.Services.Clear();
-            profile.Services.AddRange(Profile.Services);
-            foreach (var src in Profile.Files)
-            {
-                var dest = profile.Files.FirstOrDefault(file => file.FileName == src.FileName);
-                if (dest != null) dest.Base64 = src.Base64;
-            }
-
-            await ProfileStore.Store(profile);
-            Profile = profile;
-        });
+        return Task.CompletedTask;
     }
 
     private async Task Deploy()

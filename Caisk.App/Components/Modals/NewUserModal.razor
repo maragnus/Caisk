@@ -1,0 +1,73 @@
+﻿@using Caisk.Users
+@using Caisk.Objects
+<form @onsubmit="@FormSubmit">
+    <MudDialog DefaultFocus="DefaultFocus.FirstChild">
+        <DialogContent>
+            <MudTextField T="string" @bind-Value="@Name" Label="User Name" Validation="@((object)ValidateName)" Immediate Variant="Variant.Outlined"/>
+            <MudAlert Severity="Severity.Info" Class="my-4">@ObjectProfileUtility.NameConstraint</MudAlert>
+            <MudTextField T="string" @bind-Value="@_email" Label="Email Address" Immediate InputMode="InputMode.email" InputType="InputType.Email" Variant="Variant.Outlined"/>
+            <MudTextField T="string" Value="@_password" Label="Initial Password" ReadOnly Variant="Variant.Outlined"
+                          Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Refresh" AdornmentColor="Color.Primary" OnAdornmentClick="Recreate"/>
+            <MudAlert Severity="Severity.Info" Class="my-4">This user will be required to reset their password and configure 2FA on first sign in.</MudAlert>
+            <MudDivider/>
+        </DialogContent>
+        <DialogActions>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" ButtonType="ButtonType.Submit" OnClick="@Confirm" Disabled="!_isValid">@OkButton</MudButton>
+            <MudButton Color="Color.Error" OnClick="@Cancel">Cancel</MudButton>
+        </DialogActions>
+    </MudDialog>
+</form>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [Inject] IUserStore UserStore { get; init; } = default!;
+    [Parameter] public string[] Names { get; set; } = default!;
+    [Parameter] public string? OkButton { get; set; } = "Create";
+    [Parameter] public string? Name { get; set; }
+    private string? _email;
+    private string _password = default!;
+
+    private bool _isValid;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        Recreate();
+    }
+
+    private async Task Confirm()
+    {
+        if (string.IsNullOrWhiteSpace(_password)) return;
+        if (ValidateName(Name) is not null) return;
+
+        var user = await UserStore.Create(Name!);
+        user.Email = _email;
+        user.PasswordHash = UserUtility.HashPassword(_password, user.Id);
+        await UserStore.Store(user);
+        MudDialog.Close(DialogResult.Ok(Name));
+    }
+
+    private void Cancel() => MudDialog.Close(DialogResult.Cancel());
+
+    private string? ValidateName(string? name)
+    {
+        _isValid = false;
+        if (string.IsNullOrWhiteSpace(name))
+            return "Name is required";
+
+        if (!ObjectProfileUtility.IsNameValid(name))
+            return "Name format is incorrect";
+
+        if (Names.Contains(name))
+            return "Name already exists";
+
+        _isValid = true;
+        return null;
+    }
+
+    private Task FormSubmit() => Confirm();
+
+    private void Recreate() =>
+        _password = UserUtility.GeneratePassword();
+
+}

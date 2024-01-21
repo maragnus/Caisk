@@ -3,6 +3,7 @@ using Caisk.Docker;
 using Caisk.GitHub;
 using Caisk.Managers.Mongo;
 using Caisk.SecureShells;
+using Caisk.Users;
 
 namespace Caisk.Data;
 
@@ -15,4 +16,5 @@ public interface IDataContext
     IPrivateKeyStore PrivateKeyStore { get; }
     IRegistryStore RegistryStore { get; }
     IGitHubRepositoryStore GitHubRepositoryStore { get; }
+    IUserStore UserStore { get; }
 }

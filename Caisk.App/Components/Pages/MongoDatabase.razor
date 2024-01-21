@@ -1,4 +1,5 @@
 ﻿@page "/mongo/{Name}"
+@using Caisk.Managers.Mongo
 @using Caisk.SecureShells
 @inherits BaseProfileEditor<Caisk.Managers.Mongo.MongoDatabaseProfile, Caisk.Managers.Mongo.IMongoDatabaseStore>
 
@@ -48,3 +49,19 @@
         }
     </MudPaper>
 </MudContainer>
+
+@code {
+
+    protected override Task StoreProfile(MongoDatabaseProfile save)
+    {
+        save.HostName = Profile.HostName;
+        save.AuthenticationDatabase = Profile.AuthenticationDatabase;
+        save.UserName = Profile.UserName;
+        save.Password = Profile.Password;
+        save.Database = Profile.Database;
+        save.SecureShellName = Profile.SecureShellName;
+        save.TunnelLocalPort = Profile.TunnelLocalPort;
+        return Task.CompletedTask;
+    }
+
+}

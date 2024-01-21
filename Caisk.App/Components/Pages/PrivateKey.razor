@@ -44,8 +44,7 @@
                             <MudButton StartIcon="@Icons.Material.Filled.Edit" OnClick="@Rename" Color="Color.Warning">Rename</MudButton>
                             <MudDivider Vertical DividerType="DividerType.Middle" FlexItem/>
                         }
-                        <MudButton OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
-                        <MudButton StartIcon="@Icons.Material.Filled.Save" OnClick="@SaveAndClose" Color="Color.Primary" Variant="Variant.Filled" Disabled="!IsValid">Store</MudButton>
+                        <MudButton OnClick="@Cancel" Color="Color.Default">Back</MudButton>
                     </MudStack>
                 </MudStack>
             </MudForm>
@@ -66,5 +65,8 @@
 
     private void GoToShell(string ssh) =>
         NavigationManager.NavigateToProfile<SecureShellProfile>(ssh);
+
+    protected override Task StoreProfile(PrivateKeyProfile save) =>
+        Task.CompletedTask;
 
 }

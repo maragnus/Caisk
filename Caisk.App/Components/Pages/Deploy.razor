@@ -21,6 +21,7 @@
             <MudTextField Label="Application" ReadOnly Value="ParentName"/>
 
             <MudInputLabel>Services</MudInputLabel>
+
             @if (IsLoading)
             {
                 <MudProgressLinear Color="Color.Info" Indeterminate="true"/>
@@ -34,7 +35,7 @@
                             <MudSelectItem T="DockerImage?" Value="@run.Image">@run.Image (@run.Status.Status)</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudIconButton Size="Size.Medium" Icon="@Icons.Material.Filled.Refresh" OnClick="@Refresh" Color="Color.Primary"/>
+                    <MudIconButton Size="Size.Medium" Icon="@Icons.Material.Filled.Refresh" OnClick="@RefreshClick" Color="Color.Primary"/>
                 </MudStack>
             }
 
@@ -60,32 +61,24 @@
     protected override async Task OnSafeParametersSetAsync()
     {
         await base.OnSafeParametersSetAsync();
-        await UnsafeRefresh();
+        await RefreshImages();
     }
 
     record ServiceInfo(Service Service, RunInfo[] Runs);
 
     record RunInfo(DockerImage? Image, GitHubRunStatus Status);
 
-    protected override async Task Save()
+    protected override Task StoreProfile(ApplicationEnvironmentProfile save)
     {
-        IsLoading = true;
-        await SafeActionAsync(async () =>
+        foreach (var service in _services)
         {
-            var profile = await ProfileStore.Require(Name!, ParentName);
-            foreach (var service in _services)
-            {
-                var dest = profile.Services.FirstOrDefault(s => s.Name == service.Service.Name);
-                if (dest is null) continue;
-                dest.Image = service.Service.Image;
-            }
+            var dest = save.Services.FirstOrDefault(s => s.Name == service.Service.Name);
+            if (dest is null) continue;
+            dest.Image = service.Service.Image;
+        }
 
-            DeploymentManager.ApplyServices(profile);
-            await ProfileStore.Store(profile);
-            Profile = profile;
-            await Refresh();
-        });
-        IsLoading = false;
+        DeploymentManager.ApplyServices(save);
+        return Task.CompletedTask;
     }
 
     async Task DeployApp()
@@ -107,14 +100,14 @@
         });
     }
 
-    private async Task Refresh()
+    private async Task RefreshClick()
     {
         IsLoading = true;
-        await SafeActionAsync(async () => { await UnsafeRefresh(); });
+        await SafeActionAsync(async () => { await RefreshImages(); });
         IsLoading = false;
     }
 
-    private async Task UnsafeRefresh()
+    private async Task RefreshImages()
     {
         _services.Clear();
         foreach (var service in Profile.Services

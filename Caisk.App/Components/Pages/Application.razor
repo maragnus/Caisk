@@ -81,6 +81,13 @@
 
     private void OpenEnvironment(string profileName) => NavigationManager.NavigateToProfile<ApplicationEnvironmentProfile>(profileName, Profile.Name);
 
+    protected override Task StoreProfile(ApplicationProfile save)
+    {
+        save.RegistryName = Profile.RegistryName;
+        save.GitHubRepositoryName = Profile.GitHubRepositoryName;
+        return Task.CompletedTask;
+    }
+
     private async Task AddClick()
     {
         var names = await EnvironmentStore.GetNames(Profile.Name);
